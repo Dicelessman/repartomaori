@@ -3,8 +3,9 @@ import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.
 import { db } from './firebaseConfig.js';
 import { showLoader, hideLoader, showToast } from './ui.js';
 
-// Variabile globale per mantenere i dati dell'esploratore
+// Variabili globali per mantenere i dati
 let esploratoreData = null;
+let sezioniContent = {};
 
 // Funzione per inizializzare la scheda
 async function initScheda() {
@@ -86,6 +87,17 @@ async function loadEsploratoreData(esploratoreId) {
         showToast('Errore durante il caricamento dei dati. Riprova più tardi.', 'error');
         throw error;
     }
+}
+
+// Funzione per caricare il contenuto di una sezione
+async function loadSezioneContent(sezione) {
+    if (!sezioniContent[sezione]) {
+        console.log('Caricamento contenuto sezione:', sezione);
+        const response = await fetch(`sezioni/${sezione}.html`);
+        if (!response.ok) throw new Error('Sezione non trovata');
+        sezioniContent[sezione] = await response.text();
+    }
+    return sezioniContent[sezione];
 }
 
 // Funzione per caricare i dati di una sezione
@@ -266,18 +278,6 @@ window.caricaSezione = async function(sezione) {
         console.log('Caricamento sezione:', sezione);
         console.log('Dati esploratore disponibili:', esploratoreData);
         
-        // Carica l'HTML della sezione
-        const response = await fetch(`sezioni/${sezione}.html`);
-        if (!response.ok) throw new Error('Sezione non trovata');
-        const content = await response.text();
-        
-        // Aggiorna il contenuto
-        const container = document.getElementById('sezioneContent');
-        container.innerHTML = content;
-        
-        // Aspetta che il DOM sia aggiornato
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
         // Se i dati non sono presenti, caricali da Firebase
         if (!esploratoreData) {
             console.log('Dati non presenti, ricarico da Firebase');
@@ -294,6 +294,16 @@ window.caricaSezione = async function(sezione) {
             console.error('Dati mancanti o incompleti:', esploratoreData);
             throw new Error('Dati esploratore incompleti');
         }
+
+        // Carica il contenuto della sezione
+        const content = await loadSezioneContent(sezione);
+        
+        // Aggiorna il contenuto
+        const container = document.getElementById('sezioneContent');
+        container.innerHTML = content;
+        
+        // Aspetta che il DOM sia aggiornato
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Popola i campi
         await loadSezioneData(sezione, esploratoreData);
