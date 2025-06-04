@@ -1,0 +1,47 @@
+<!-- Sezione Informazioni Sanitarie -->
+<div class="px-4 py-5 sm:px-6">
+    <h4 class="text-lg font-medium text-gray-900">Informazioni Sanitarie</h4>
+</div>
+<dl>
+    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium text-gray-500">Gruppo Sanguigno</dt>
+        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <span id="gruppoSanguignoDisplay"></span>
+            <select id="gruppoSanguignoEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Seleziona gruppo sanguigno</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="0+">0+</option>
+                <option value="0-">0-</option>
+            </select>
+        </dd>
+    </div>
+    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium text-gray-500">Intolleranze Alimentari</dt>
+        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <span id="intolleranzeDisplay"></span>
+            <textarea id="intolleranzeEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+            <button class="mt-2 text-blue-600 hover:text-blue-800" onclick="copiaIntolleranze()">
+                📋 Copia
+            </button>
+        </dd>
+    </div>
+    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium text-gray-500">Allergie</dt>
+        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <span id="allergieDisplay"></span>
+            <textarea id="allergieEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+        </dd>
+    </div>
+    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium text-gray-500">Farmaci</dt>
+        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <span id="farmaciDisplay"></span>
+            <textarea id="farmaciEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+        </dd>
+    </div>
+</dl> 

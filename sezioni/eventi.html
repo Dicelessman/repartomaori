@@ -1,0 +1,39 @@
+<!-- Sezione Eventi -->
+<div class="px-4 py-5 sm:px-6">
+    <h4 class="text-lg font-medium text-gray-900">Eventi</h4>
+</div>
+<div class="px-4 py-5 sm:px-6">
+    <div id="eventiList" class="space-y-4">
+        <!-- Gli eventi verranno caricate dinamicamente qui -->
+    </div>
+    <div id="eventiEdit" class="hidden mt-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+                <label for="eventoNome" class="block text-sm font-medium text-gray-700">Nome Evento</label>
+                <input type="text" id="eventoNome" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="eventoData" class="block text-sm font-medium text-gray-700">Data</label>
+                <input type="date" id="eventoData" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+        <div class="mt-4">
+            <label for="eventoNote" class="block text-sm font-medium text-gray-700">Note</label>
+            <textarea id="eventoNote" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+        </div>
+        <div class="mt-4 flex justify-end space-x-3">
+            <button onclick="aggiungiEvento()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                Aggiungi
+            </button>
+            <button onclick="annullaEvento()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                Annulla
+            </button>
+        </div>
+    </div>
+    <button onclick="mostraFormEvento()" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Aggiungi Evento
+    </button>
+</div> 

@@ -1,0 +1,44 @@
+<!-- Sezione Contatti -->
+<div class="px-4 py-5 sm:px-6">
+    <h4 class="text-lg font-medium text-gray-900">Contatti</h4>
+</div>
+<dl>
+    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium text-gray-500">Genitore 1</dt>
+        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <div id="genitore1Display"></div>
+            <div id="genitore1Edit" class="hidden space-y-2">
+                <input type="text" id="genitore1NomeEdit" placeholder="Nome" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="email" id="genitore1EmailEdit" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="tel" id="genitore1NumeroEdit" placeholder="Numero" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mt-2 space-x-2">
+                <button class="text-blue-600 hover:text-blue-800" onclick="chiama('genitore1')">
+                    📞 Chiama
+                </button>
+                <button class="text-green-600 hover:text-green-800" onclick="whatsapp('genitore1')">
+                    💬 WhatsApp
+                </button>
+            </div>
+        </dd>
+    </div>
+    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <dt class="text-sm font-medium text-gray-500">Genitore 2</dt>
+        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <div id="genitore2Display"></div>
+            <div id="genitore2Edit" class="hidden space-y-2">
+                <input type="text" id="genitore2NomeEdit" placeholder="Nome" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="email" id="genitore2EmailEdit" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="tel" id="genitore2NumeroEdit" placeholder="Numero" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mt-2 space-x-2">
+                <button class="text-blue-600 hover:text-blue-800" onclick="chiama('genitore2')">
+                    📞 Chiama
+                </button>
+                <button class="text-green-600 hover:text-green-800" onclick="whatsapp('genitore2')">
+                    💬 WhatsApp
+                </button>
+            </div>
+        </dd>
+    </div>
+</dl> 

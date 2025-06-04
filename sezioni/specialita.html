@@ -1,0 +1,39 @@
+<!-- Sezione Specialità -->
+<div class="px-4 py-5 sm:px-6">
+    <h4 class="text-lg font-medium text-gray-900">Specialità</h4>
+</div>
+<div class="px-4 py-5 sm:px-6">
+    <div id="specialitaList" class="space-y-4">
+        <!-- Le specialità verranno caricate dinamicamente qui -->
+    </div>
+    <div id="specialitaEdit" class="hidden mt-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+                <label for="specialitaNome" class="block text-sm font-medium text-gray-700">Nome Specialità</label>
+                <input type="text" id="specialitaNome" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="specialitaData" class="block text-sm font-medium text-gray-700">Data Conseguita</label>
+                <input type="date" id="specialitaData" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+        <div class="mt-4">
+            <label for="specialitaNote" class="block text-sm font-medium text-gray-700">Note</label>
+            <textarea id="specialitaNote" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+        </div>
+        <div class="mt-4 flex justify-end space-x-3">
+            <button onclick="aggiungiSpecialita()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                Aggiungi
+            </button>
+            <button onclick="annullaSpecialita()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                Annulla
+            </button>
+        </div>
+    </div>
+    <button onclick="mostraFormSpecialita()" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Aggiungi Specialità
+    </button>
+</div> 

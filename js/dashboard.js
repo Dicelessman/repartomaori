@@ -77,10 +77,16 @@ function createSchedaElement(id, scheda) {
                     </span>
                 </div>
             </div>
-            <button onclick="window.location.href='scheda.html?id=${id}'" 
-                    class="w-full mt-2 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-primary-dark dark:hover:bg-primary">
-                <i class="fas fa-eye mr-2"></i>Visualizza Scheda
-            </button>
+            <div class="flex flex-col space-y-2">
+                <button onclick="window.location.href='scheda.html?id=${id}'" 
+                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-primary-dark dark:hover:bg-primary">
+                    <i class="fas fa-eye mr-2"></i>Visualizza Scheda
+                </button>
+                <button onclick="window.location.href='esplo.html?id=${id}'" 
+                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-primary-dark dark:hover:bg-primary">
+                    <i class="fas fa-compass mr-2"></i>Nuova Scheda
+                </button>
+            </div>
         </div>
     `;
     return div;
