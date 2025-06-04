@@ -65,6 +65,7 @@ async function loadEsploratoreData(esploratoreId) {
 
         // Mostra il contenuto prima di caricare le sezioni
         document.getElementById('schedaContent').classList.remove('hidden');
+        document.getElementById('loading').classList.add('hidden');
 
         // Carica la prima sezione (anagrafici) e gestisci gli errori individualmente
         try {
@@ -85,7 +86,6 @@ async function loadEsploratoreData(esploratoreId) {
 async function loadSezioneData(sezione, esploratore) {
     const container = document.getElementById('sezioneContent');
     try {
-        showLoader();
         const response = await fetch(`sezioni/${sezione}.html`);
         if (!response.ok) throw new Error('Sezione non trovata');
         const content = await response.text();
@@ -116,11 +116,9 @@ async function loadSezioneData(sezione, esploratore) {
                 break;
             // Aggiungi altri casi per le altre sezioni
         }
-        hideLoader();
     } catch (error) {
         console.error(`Errore nel caricamento della sezione ${sezione}:`, error);
         container.innerHTML = '<div class="p-4 text-red-600">Errore nel caricamento della sezione</div>';
-        hideLoader();
     }
 }
 
