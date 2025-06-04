@@ -220,14 +220,22 @@ document.addEventListener('DOMContentLoaded', initScheda);
 // Esponi le funzioni necessarie globalmente
 window.caricaSezione = async function(sezione) {
     try {
+        showLoader();
+        console.log('Caricamento sezione:', sezione);
+        console.log('Dati esploratore disponibili:', esploratoreData);
+        
         if (!esploratoreData) {
+            console.log('Dati non presenti, ricarico da Firebase');
             const urlParams = new URLSearchParams(window.location.search);
             const esploratoreId = urlParams.get('id');
             const esploratoreRef = doc(db, "utenti", esploratoreId);
             const esploratoreDoc = await getDoc(esploratoreRef);
             esploratoreData = esploratoreDoc.data();
+            console.log('Dati ricaricati:', esploratoreData);
         }
+        
         await loadSezioneData(sezione, esploratoreData);
+        hideLoader();
     } catch (error) {
         console.error('Errore nel caricamento della sezione:', error);
         showToast('Errore nel caricamento della sezione', 'error');
