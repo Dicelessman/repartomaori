@@ -41,6 +41,7 @@ async function initScheda() {
 // Funzione per caricare i dati dell'esploratore
 async function loadEsploratoreData(esploratoreId) {
     try {
+        console.log('Caricamento dati esploratore:', esploratoreId);
         const esploratoreRef = doc(db, "utenti", esploratoreId);
         const esploratoreDoc = await getDoc(esploratoreRef);
 
@@ -51,6 +52,7 @@ async function loadEsploratoreData(esploratoreId) {
         }
 
         const esploratore = esploratoreDoc.data();
+        console.log('Dati esploratore recuperati:', esploratore);
         
         // Aggiorna l'header con i dati dell'esploratore
         document.getElementById('nomeCompleto').textContent = `${esploratore.nome} ${esploratore.cognome}`;
@@ -84,6 +86,7 @@ async function loadEsploratoreData(esploratoreId) {
 
 // Funzione per caricare i dati di una sezione
 async function loadSezioneData(sezione, esploratore) {
+    console.log('Caricamento sezione:', sezione, 'con dati:', esploratore);
     const container = document.getElementById('sezioneContent');
     try {
         const response = await fetch(`sezioni/${sezione}.html`);
@@ -94,23 +97,28 @@ async function loadSezioneData(sezione, esploratore) {
         // Popola i campi con i dati dell'esploratore
         switch (sezione) {
             case 'anagrafici':
+                console.log('Popolamento sezione anagrafici');
                 // Formatta la data di nascita se presente
                 const dataNascita = esploratore.dataNascita ? new Date(esploratore.dataNascita).toLocaleDateString('it-IT') : '-';
+                console.log('Data nascita:', dataNascita);
                 document.getElementById('dataNascitaDisplay').textContent = dataNascita;
                 if (document.getElementById('dataNascitaEdit')) {
                     document.getElementById('dataNascitaEdit').value = esploratore.dataNascita || '';
                 }
 
+                console.log('Codice fiscale:', esploratore.codiceFiscale);
                 document.getElementById('codiceFiscaleDisplay').textContent = esploratore.codiceFiscale || '-';
                 if (document.getElementById('codiceFiscaleEdit')) {
                     document.getElementById('codiceFiscaleEdit').value = esploratore.codiceFiscale || '';
                 }
 
+                console.log('Indirizzo:', esploratore.indirizzo);
                 document.getElementById('indirizzoDisplay').textContent = esploratore.indirizzo || '-';
                 if (document.getElementById('indirizzoEdit')) {
                     document.getElementById('indirizzoEdit').value = esploratore.indirizzo || '';
                 }
 
+                console.log('Telefono:', esploratore.telefono);
                 document.getElementById('telefonoDisplay').textContent = esploratore.telefono || '-';
                 if (document.getElementById('telefonoEdit')) {
                     document.getElementById('telefonoEdit').value = esploratore.telefono || '';
