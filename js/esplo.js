@@ -11,6 +11,7 @@ async function initScheda() {
         // Verifica autenticazione
         const user = await checkAuth();
         if (!user) {
+            hideLoader();
             window.location.href = 'login.html';
             return;
         }
@@ -20,6 +21,7 @@ async function initScheda() {
         const esploratoreId = urlParams.get('id');
 
         if (!esploratoreId) {
+            hideLoader();
             showToast('ID esploratore non specificato', 'error');
             window.location.href = 'dashboard.html';
             return;
@@ -61,17 +63,16 @@ async function loadEsploratoreData(esploratoreId) {
             document.getElementById('staffControls').classList.remove('hidden');
         }
 
-        // Carica i dati nelle sezioni
-        await loadSezioneData('anagrafici', esploratore);
-        await loadSezioneData('contatti', esploratore);
-        await loadSezioneData('sanitarie', esploratore);
-        await loadSezioneData('progressione', esploratore);
-        await loadSezioneData('specialita', esploratore);
-        await loadSezioneData('eventi', esploratore);
-        await loadSezioneData('documenti', esploratore);
-
-        // Mostra il contenuto
+        // Mostra il contenuto prima di caricare le sezioni
         document.getElementById('schedaContent').classList.remove('hidden');
+
+        // Carica la prima sezione (anagrafici) e gestisci gli errori individualmente
+        try {
+            await loadSezioneData('anagrafici', esploratore);
+        } catch (error) {
+            console.error('Errore nel caricamento della sezione anagrafici:', error);
+            showToast('Errore nel caricamento della sezione anagrafici', 'error');
+        }
 
     } catch (error) {
         console.error('Errore durante il caricamento dei dati:', error);
