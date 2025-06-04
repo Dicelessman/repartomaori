@@ -3,6 +3,9 @@ import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.
 import { db } from './firebaseConfig.js';
 import { showLoader, hideLoader, showToast } from './ui.js';
 
+// Variabile globale per mantenere i dati dell'esploratore
+let esploratoreData = null;
+
 // Funzione per inizializzare la scheda
 async function initScheda() {
     try {
@@ -51,14 +54,14 @@ async function loadEsploratoreData(esploratoreId) {
             return;
         }
 
-        const esploratore = esploratoreDoc.data();
-        console.log('Dati esploratore recuperati:', esploratore);
-        console.log('Struttura completa dei dati:', JSON.stringify(esploratore, null, 2));
+        esploratoreData = esploratoreDoc.data();
+        console.log('Dati esploratore recuperati:', esploratoreData);
+        console.log('Struttura completa dei dati:', JSON.stringify(esploratoreData, null, 2));
         
         // Aggiorna l'header con i dati dell'esploratore
-        document.getElementById('nomeCompleto').textContent = `${esploratore.nome} ${esploratore.cognome}`;
-        document.getElementById('emailLink').textContent = esploratore.email;
-        document.getElementById('emailLink').href = `mailto:${esploratore.email}`;
+        document.getElementById('nomeCompleto').textContent = `${esploratoreData.nome} ${esploratoreData.cognome}`;
+        document.getElementById('emailLink').textContent = esploratoreData.email;
+        document.getElementById('emailLink').href = `mailto:${esploratoreData.email}`;
 
         // Mostra i controlli staff se l'utente è staff approvato
         const isApproved = await isStaffApproved();
@@ -72,7 +75,7 @@ async function loadEsploratoreData(esploratoreId) {
 
         // Carica la prima sezione (anagrafici) e gestisci gli errori individualmente
         try {
-            await loadSezioneData('anagrafici', esploratore);
+            await loadSezioneData('anagrafici', esploratoreData);
         } catch (error) {
             console.error('Errore nel caricamento della sezione anagrafici:', error);
             showToast('Errore nel caricamento della sezione anagrafici', 'error');
@@ -217,12 +220,14 @@ document.addEventListener('DOMContentLoaded', initScheda);
 // Esponi le funzioni necessarie globalmente
 window.caricaSezione = async function(sezione) {
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const esploratoreId = urlParams.get('id');
-        const esploratoreRef = doc(db, "utenti", esploratoreId);
-        const esploratoreDoc = await getDoc(esploratoreRef);
-        const esploratore = esploratoreDoc.data();
-        await loadSezioneData(sezione, esploratore);
+        if (!esploratoreData) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const esploratoreId = urlParams.get('id');
+            const esploratoreRef = doc(db, "utenti", esploratoreId);
+            const esploratoreDoc = await getDoc(esploratoreRef);
+            esploratoreData = esploratoreDoc.data();
+        }
+        await loadSezioneData(sezione, esploratoreData);
     } catch (error) {
         console.error('Errore nel caricamento della sezione:', error);
         showToast('Errore nel caricamento della sezione', 'error');
