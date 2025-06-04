@@ -151,66 +151,95 @@ async function loadSezioneData(sezione, esploratore) {
             break;
 
         case 'contatti':
-            // Popola i dati dei genitori
+            console.log('Popolamento sezione contatti');
             const datiContatti = esploratore.datiScheda?.contatti || {};
+            console.log('Dati contatti completi:', datiContatti);
+            
             if (datiContatti.genitore1) {
                 const gen1 = datiContatti.genitore1;
-                document.getElementById('genitore1Display').innerHTML = `
-                    <div>${gen1.nome || '-'}</div>
-                    <div>${gen1.email || '-'}</div>
-                    <div>${gen1.numero || '-'}</div>
-                `;
-                if (document.getElementById('genitore1NomeEdit')) {
-                    document.getElementById('genitore1NomeEdit').value = gen1.nome || '';
-                    document.getElementById('genitore1EmailEdit').value = gen1.email || '';
-                    document.getElementById('genitore1NumeroEdit').value = gen1.numero || '';
+                const genitore1Display = document.getElementById('genitore1Display');
+                if (genitore1Display) {
+                    genitore1Display.innerHTML = `
+                        <div>${gen1.nome || '-'}</div>
+                        <div>${gen1.email || '-'}</div>
+                        <div>${gen1.numero || '-'}</div>
+                    `;
+                    console.log('Genitore 1 display aggiornato:', gen1);
                 }
             }
 
             if (datiContatti.genitore2) {
                 const gen2 = datiContatti.genitore2;
-                document.getElementById('genitore2Display').innerHTML = `
-                    <div>${gen2.nome || '-'}</div>
-                    <div>${gen2.email || '-'}</div>
-                    <div>${gen2.numero || '-'}</div>
-                `;
-                if (document.getElementById('genitore2NomeEdit')) {
-                    document.getElementById('genitore2NomeEdit').value = gen2.nome || '';
-                    document.getElementById('genitore2EmailEdit').value = gen2.email || '';
-                    document.getElementById('genitore2NumeroEdit').value = gen2.numero || '';
+                const genitore2Display = document.getElementById('genitore2Display');
+                if (genitore2Display) {
+                    genitore2Display.innerHTML = `
+                        <div>${gen2.nome || '-'}</div>
+                        <div>${gen2.email || '-'}</div>
+                        <div>${gen2.numero || '-'}</div>
+                    `;
+                    console.log('Genitore 2 display aggiornato:', gen2);
                 }
             }
             break;
 
         case 'sanitarie':
+            console.log('Popolamento sezione sanitarie');
             const datiSanitari = esploratore.datiScheda?.sanitarie || {};
-            document.getElementById('gruppoSanguignoDisplay').textContent = datiSanitari.gruppoSanguigno || '-';
-            if (document.getElementById('gruppoSanguignoEdit')) {
-                document.getElementById('gruppoSanguignoEdit').value = datiSanitari.gruppoSanguigno || '';
+            console.log('Dati sanitari completi:', datiSanitari);
+            
+            const gruppoSanguignoDisplay = document.getElementById('gruppoSanguignoDisplay');
+            if (gruppoSanguignoDisplay) {
+                gruppoSanguignoDisplay.textContent = datiSanitari.gruppoSanguigno || '-';
+                console.log('Gruppo sanguigno display aggiornato:', datiSanitari.gruppoSanguigno);
             }
 
-            document.getElementById('intolleranzeDisplay').textContent = datiSanitari.intolleranze || '-';
-            if (document.getElementById('intolleranzeEdit')) {
-                document.getElementById('intolleranzeEdit').value = datiSanitari.intolleranze || '';
+            const intolleranzeDisplay = document.getElementById('intolleranzeDisplay');
+            if (intolleranzeDisplay) {
+                intolleranzeDisplay.textContent = datiSanitari.intolleranze || '-';
+                console.log('Intolleranze display aggiornato:', datiSanitari.intolleranze);
             }
 
-            document.getElementById('allergieDisplay').textContent = datiSanitari.allergie || '-';
-            if (document.getElementById('allergieEdit')) {
-                document.getElementById('allergieEdit').value = datiSanitari.allergie || '';
+            const allergieDisplay = document.getElementById('allergieDisplay');
+            if (allergieDisplay) {
+                allergieDisplay.textContent = datiSanitari.allergie || '-';
+                console.log('Allergie display aggiornato:', datiSanitari.allergie);
             }
 
-            document.getElementById('farmaciDisplay').textContent = datiSanitari.farmaci || '-';
-            if (document.getElementById('farmaciEdit')) {
-                document.getElementById('farmaciEdit').value = datiSanitari.farmaci || '';
+            const farmaciDisplay = document.getElementById('farmaciDisplay');
+            if (farmaciDisplay) {
+                farmaciDisplay.textContent = datiSanitari.farmaci || '-';
+                console.log('Farmaci display aggiornato:', datiSanitari.farmaci);
             }
             break;
 
         case 'progressione':
+            console.log('Popolamento sezione progressione');
             const datiProgressione = esploratore.datiScheda?.progressione || {};
-            document.getElementById('promessaDisplay').textContent = datiProgressione.promessa || '-';
-            document.getElementById('brevettoDisplay').textContent = datiProgressione.brevetto || '-';
-            document.getElementById('specialitaDisplay').textContent = datiProgressione.specialita || '-';
-            document.getElementById('cordaDisplay').textContent = datiProgressione.corda || '-';
+            console.log('Dati progressione completi:', datiProgressione);
+            
+            const promessaDisplay = document.getElementById('promessaDisplay');
+            if (promessaDisplay) {
+                promessaDisplay.textContent = datiProgressione.promessa || '-';
+                console.log('Promessa display aggiornato:', datiProgressione.promessa);
+            }
+
+            const brevettoDisplay = document.getElementById('brevettoDisplay');
+            if (brevettoDisplay) {
+                brevettoDisplay.textContent = datiProgressione.brevetto || '-';
+                console.log('Brevetto display aggiornato:', datiProgressione.brevetto);
+            }
+
+            const specialitaDisplay = document.getElementById('specialitaDisplay');
+            if (specialitaDisplay) {
+                specialitaDisplay.textContent = datiProgressione.specialita || '-';
+                console.log('Specialità display aggiornato:', datiProgressione.specialita);
+            }
+
+            const cordaDisplay = document.getElementById('cordaDisplay');
+            if (cordaDisplay) {
+                cordaDisplay.textContent = datiProgressione.corda || '-';
+                console.log('Corda display aggiornato:', datiProgressione.corda);
+            }
             break;
     }
 }
@@ -237,6 +266,19 @@ window.caricaSezione = async function(sezione) {
         console.log('Caricamento sezione:', sezione);
         console.log('Dati esploratore disponibili:', esploratoreData);
         
+        // Carica l'HTML della sezione
+        const response = await fetch(`sezioni/${sezione}.html`);
+        if (!response.ok) throw new Error('Sezione non trovata');
+        const content = await response.text();
+        
+        // Aggiorna il contenuto
+        const container = document.getElementById('sezioneContent');
+        container.innerHTML = content;
+        
+        // Aspetta che il DOM sia aggiornato
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Se i dati non sono presenti, caricali da Firebase
         if (!esploratoreData) {
             console.log('Dati non presenti, ricarico da Firebase');
             const urlParams = new URLSearchParams(window.location.search);
@@ -252,18 +294,6 @@ window.caricaSezione = async function(sezione) {
             console.error('Dati mancanti o incompleti:', esploratoreData);
             throw new Error('Dati esploratore incompleti');
         }
-
-        // Carica l'HTML della sezione
-        const response = await fetch(`sezioni/${sezione}.html`);
-        if (!response.ok) throw new Error('Sezione non trovata');
-        const content = await response.text();
-        
-        // Aggiorna il contenuto
-        const container = document.getElementById('sezioneContent');
-        container.innerHTML = content;
-        
-        // Aspetta che il DOM sia aggiornato
-        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Popola i campi
         await loadSezioneData(sezione, esploratoreData);
