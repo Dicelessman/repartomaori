@@ -6,8 +6,8 @@
     <title>Reparto Maori TO4-Bra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="/cursorscout/js/firebaseConfig.js"></script>
-    <script type="module" src="/cursorscout/js/auth.js"></script>
+    <script type="module" src="js/firebaseConfig.js"></script>
+    <script type="module" src="js/auth.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div id="loading" class="flex items-center justify-center min-h-screen">
@@ -16,15 +16,15 @@
 
     <script type="module">
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { auth } from '/cursorscout/js/firebaseConfig.js';
+        import { auth } from './js/firebaseConfig.js';
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // Se l'utente è loggato, reindirizza alla dashboard
-                window.location.href = '/cursorscout/dashboard.html';
+                window.location.href = 'dashboard.html';
             } else {
                 // Se l'utente non è loggato, reindirizza al login
-                window.location.href = '/cursorscout/login.html';
+                window.location.href = 'login.html';
             }
         });
     </script>
