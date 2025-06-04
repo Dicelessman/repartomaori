@@ -106,11 +106,14 @@
         </div>
     </main>
 
-    <script>
+    <script type="module">
+        import { showLoader, hideLoader } from './js/ui.js';
+
         // Funzione per caricare dinamicamente le sezioni
-        async function caricaSezione(sezione) {
+        window.caricaSezione = async function(sezione) {
             const container = document.getElementById('sezioneContent');
             try {
+                showLoader();
                 const response = await fetch(`sezioni/${sezione}.html`);
                 if (!response.ok) throw new Error('Sezione non trovata');
                 const content = await response.text();
@@ -129,6 +132,8 @@
             } catch (error) {
                 console.error('Errore nel caricamento della sezione:', error);
                 container.innerHTML = '<div class="p-4 text-red-600">Errore nel caricamento della sezione</div>';
+            } finally {
+                hideLoader();
             }
         }
 
