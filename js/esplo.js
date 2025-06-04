@@ -6,6 +6,7 @@ import { showLoader, hideLoader, showToast } from './ui.js';
 // Variabili globali per mantenere i dati
 let esploratoreData = null;
 let sezioniContent = {};
+let currentSezione = null;
 
 // Funzione per inizializzare la scheda
 async function initScheda() {
@@ -89,13 +90,73 @@ async function loadEsploratoreData(esploratoreId) {
     }
 }
 
+// Funzione per creare gli elementi della sezione anagrafici
+function createAnagraficiSection() {
+    const container = document.createElement('div');
+    container.className = 'space-y-6';
+    
+    // Data di nascita
+    const dataNascitaGroup = document.createElement('div');
+    dataNascitaGroup.className = 'flex justify-between items-center';
+    dataNascitaGroup.innerHTML = `
+        <div class="flex-1">
+            <h3 class="text-lg font-medium">Data di Nascita</h3>
+            <p id="dataNascitaDisplay" class="text-gray-600">-</p>
+        </div>
+        <input type="date" id="dataNascitaEdit" class="hidden border rounded px-2 py-1">
+    `;
+    container.appendChild(dataNascitaGroup);
+
+    // Codice fiscale
+    const codiceFiscaleGroup = document.createElement('div');
+    codiceFiscaleGroup.className = 'flex justify-between items-center';
+    codiceFiscaleGroup.innerHTML = `
+        <div class="flex-1">
+            <h3 class="text-lg font-medium">Codice Fiscale</h3>
+            <p id="codiceFiscaleDisplay" class="text-gray-600">-</p>
+        </div>
+        <input type="text" id="codiceFiscaleEdit" class="hidden border rounded px-2 py-1">
+    `;
+    container.appendChild(codiceFiscaleGroup);
+
+    // Indirizzo
+    const indirizzoGroup = document.createElement('div');
+    indirizzoGroup.className = 'flex justify-between items-center';
+    indirizzoGroup.innerHTML = `
+        <div class="flex-1">
+            <h3 class="text-lg font-medium">Indirizzo</h3>
+            <p id="indirizzoDisplay" class="text-gray-600">-</p>
+        </div>
+        <input type="text" id="indirizzoEdit" class="hidden border rounded px-2 py-1">
+    `;
+    container.appendChild(indirizzoGroup);
+
+    // Telefono
+    const telefonoGroup = document.createElement('div');
+    telefonoGroup.className = 'flex justify-between items-center';
+    telefonoGroup.innerHTML = `
+        <div class="flex-1">
+            <h3 class="text-lg font-medium">Telefono</h3>
+            <p id="telefonoDisplay" class="text-gray-600">-</p>
+        </div>
+        <input type="tel" id="telefonoEdit" class="hidden border rounded px-2 py-1">
+    `;
+    container.appendChild(telefonoGroup);
+
+    return container;
+}
+
 // Funzione per caricare il contenuto di una sezione
 async function loadSezioneContent(sezione) {
     if (!sezioniContent[sezione]) {
         console.log('Caricamento contenuto sezione:', sezione);
-        const response = await fetch(`sezioni/${sezione}.html`);
-        if (!response.ok) throw new Error('Sezione non trovata');
-        sezioniContent[sezione] = await response.text();
+        if (sezione === 'anagrafici') {
+            sezioniContent[sezione] = createAnagraficiSection();
+        } else {
+            const response = await fetch(`sezioni/${sezione}.html`);
+            if (!response.ok) throw new Error('Sezione non trovata');
+            sezioniContent[sezione] = await response.text();
+        }
     }
     return sezioniContent[sezione];
 }
@@ -300,13 +361,19 @@ window.caricaSezione = async function(sezione) {
         
         // Aggiorna il contenuto
         const container = document.getElementById('sezioneContent');
-        container.innerHTML = content;
+        container.innerHTML = '';
+        if (sezione === 'anagrafici') {
+            container.appendChild(content);
+        } else {
+            container.innerHTML = content;
+        }
         
         // Aspetta che il DOM sia aggiornato
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Popola i campi
         await loadSezioneData(sezione, esploratoreData);
+        currentSezione = sezione;
         hideLoader();
     } catch (error) {
         console.error('Errore nel caricamento della sezione:', error);
