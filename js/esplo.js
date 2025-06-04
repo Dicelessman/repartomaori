@@ -99,29 +99,29 @@ async function loadSezioneData(sezione, esploratore) {
             case 'anagrafici':
                 console.log('Popolamento sezione anagrafici');
                 // Formatta la data di nascita se presente
-                const dataNascita = esploratore.dataNascita ? new Date(esploratore.dataNascita).toLocaleDateString('it-IT') : '-';
+                const dataNascita = esploratore.data_nascita ? new Date(esploratore.data_nascita).toLocaleDateString('it-IT') : '-';
                 console.log('Data nascita:', dataNascita);
                 document.getElementById('dataNascitaDisplay').textContent = dataNascita;
                 if (document.getElementById('dataNascitaEdit')) {
-                    document.getElementById('dataNascitaEdit').value = esploratore.dataNascita || '';
+                    document.getElementById('dataNascitaEdit').value = esploratore.data_nascita || '';
                 }
 
-                console.log('Codice fiscale:', esploratore.codiceFiscale);
-                document.getElementById('codiceFiscaleDisplay').textContent = esploratore.codiceFiscale || '-';
+                console.log('Codice fiscale:', esploratore.codice_fiscale);
+                document.getElementById('codiceFiscaleDisplay').textContent = esploratore.codice_fiscale || '-';
                 if (document.getElementById('codiceFiscaleEdit')) {
-                    document.getElementById('codiceFiscaleEdit').value = esploratore.codiceFiscale || '';
+                    document.getElementById('codiceFiscaleEdit').value = esploratore.codice_fiscale || '';
                 }
 
-                console.log('Indirizzo:', esploratore.indirizzo);
-                document.getElementById('indirizzoDisplay').textContent = esploratore.indirizzo || '-';
+                console.log('Indirizzo:', esploratore.indirizzo_residenza);
+                document.getElementById('indirizzoDisplay').textContent = esploratore.indirizzo_residenza || '-';
                 if (document.getElementById('indirizzoEdit')) {
-                    document.getElementById('indirizzoEdit').value = esploratore.indirizzo || '';
+                    document.getElementById('indirizzoEdit').value = esploratore.indirizzo_residenza || '';
                 }
 
-                console.log('Telefono:', esploratore.telefono);
-                document.getElementById('telefonoDisplay').textContent = esploratore.telefono || '-';
+                console.log('Telefono:', esploratore.numero_telefono);
+                document.getElementById('telefonoDisplay').textContent = esploratore.numero_telefono || '-';
                 if (document.getElementById('telefonoEdit')) {
-                    document.getElementById('telefonoEdit').value = esploratore.telefono || '';
+                    document.getElementById('telefonoEdit').value = esploratore.numero_telefono || '';
                 }
                 break;
 
@@ -161,14 +161,14 @@ async function loadSezioneData(sezione, esploratore) {
                 break;
 
             case 'sanitarie':
-                document.getElementById('gruppoSanguignoDisplay').textContent = esploratore.gruppoSanguigno || '-';
+                document.getElementById('gruppoSanguignoDisplay').textContent = esploratore.gruppo_sanguigno || '-';
                 if (document.getElementById('gruppoSanguignoEdit')) {
-                    document.getElementById('gruppoSanguignoEdit').value = esploratore.gruppoSanguigno || '';
+                    document.getElementById('gruppoSanguignoEdit').value = esploratore.gruppo_sanguigno || '';
                 }
 
-                document.getElementById('intolleranzeDisplay').textContent = esploratore.intolleranze || '-';
+                document.getElementById('intolleranzeDisplay').textContent = esploratore.intolleranze_alimentari || '-';
                 if (document.getElementById('intolleranzeEdit')) {
-                    document.getElementById('intolleranzeEdit').value = esploratore.intolleranze || '';
+                    document.getElementById('intolleranzeEdit').value = esploratore.intolleranze_alimentari || '';
                 }
 
                 document.getElementById('allergieDisplay').textContent = esploratore.allergie || '-';
@@ -183,7 +183,7 @@ async function loadSezioneData(sezione, esploratore) {
                 break;
 
             case 'progressione':
-                document.getElementById('promessaDisplay').textContent = esploratore.promessa || '-';
+                document.getElementById('promessaDisplay').textContent = esploratore.data_promessa || '-';
                 document.getElementById('brevettoDisplay').textContent = esploratore.brevetto || '-';
                 document.getElementById('specialitaDisplay').textContent = esploratore.specialita || '-';
                 document.getElementById('cordaDisplay').textContent = esploratore.corda || '-';
