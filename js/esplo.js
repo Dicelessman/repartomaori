@@ -85,6 +85,7 @@ async function loadEsploratoreData(esploratoreId) {
 async function loadSezioneData(sezione, esploratore) {
     const container = document.getElementById('sezioneContent');
     try {
+        showLoader();
         const response = await fetch(`sezioni/${sezione}.html`);
         if (!response.ok) throw new Error('Sezione non trovata');
         const content = await response.text();
@@ -115,9 +116,11 @@ async function loadSezioneData(sezione, esploratore) {
                 break;
             // Aggiungi altri casi per le altre sezioni
         }
+        hideLoader();
     } catch (error) {
         console.error(`Errore nel caricamento della sezione ${sezione}:`, error);
         container.innerHTML = '<div class="p-4 text-red-600">Errore nel caricamento della sezione</div>';
+        hideLoader();
     }
 }
 
@@ -138,10 +141,16 @@ document.addEventListener('DOMContentLoaded', initScheda);
 
 // Esponi le funzioni necessarie globalmente
 window.caricaSezione = async function(sezione) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const esploratoreId = urlParams.get('id');
-    const esploratoreRef = doc(db, "utenti", esploratoreId);
-    const esploratoreDoc = await getDoc(esploratoreRef);
-    const esploratore = esploratoreDoc.data();
-    await loadSezioneData(sezione, esploratore);
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const esploratoreId = urlParams.get('id');
+        const esploratoreRef = doc(db, "utenti", esploratoreId);
+        const esploratoreDoc = await getDoc(esploratoreRef);
+        const esploratore = esploratoreDoc.data();
+        await loadSezioneData(sezione, esploratore);
+    } catch (error) {
+        console.error('Errore nel caricamento della sezione:', error);
+        showToast('Errore nel caricamento della sezione', 'error');
+        hideLoader();
+    }
 }; 
