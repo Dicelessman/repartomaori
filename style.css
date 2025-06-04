@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Verde principale e sue varianti */
+    --primary: rgb(37, 113, 72);          /* Verde dominante */
+    --primary-light: rgb(47, 143, 92);    /* Verde più chiaro */
+    --primary-dark: rgb(27, 83, 52);      /* Verde più scuro */
+    --primary-lighter: rgb(57, 173, 112); /* Verde molto chiaro */
+    --primary-darker: rgb(17, 63, 32);    /* Verde molto scuro */
+    --primary-green: rgb(0, 118, 50);
+    --primary-green-light: rgb(0, 138, 58);
+    --primary-green-dark: rgb(0, 98, 42);
+    --secondary-green: rgb(0, 158, 68);
+    --accent-green: rgb(0, 178, 78);
+}
+
+/* Tema scuro */
+.dark {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #a0aec0;
+    --primary: rgb(47, 143, 92);          /* Verde più chiaro per il tema scuro */
+    --primary-light: rgb(57, 173, 112);   /* Verde molto chiaro per il tema scuro */
+    --primary-dark: rgb(37, 113, 72);     /* Verde dominante per il tema scuro */
+}
+
+/* Tema chiaro */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7fafc;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-light);
+}
+
+.text-primary {
+    color: var(--primary);
+}
+
+.bg-primary {
+    background-color: var(--primary);
+}
+
+.border-primary {
+    border-color: var(--primary);
+}
+
+.bg-white {
+    background-color: var(--bg-primary);
+    transition: background-color 0.3s ease;
+}
+
+.text-gray-900 {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.text-gray-700 {
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+}
+
+/* Animazioni */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Transizioni fluide */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Stili per il loader */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-primary);
+    z-index: 50;
+    transition: background-color 0.3s ease;
+}
+
+/* Stili per le notifiche toast */
+.toast-enter {
+    transform: translateX(100%);
+}
+
+.toast-enter-active {
+    transform: translateX(0);
+    transition: transform 300ms ease-in-out;
+}
+
+.toast-exit {
+    transform: translateX(0);
+}
+
+.toast-exit-active {
+    transform: translateX(100%);
+    transition: transform 300ms ease-in-out;
+}
+
+/* Stili per il menu mobile */
+@media (max-width: 768px) {
+    #mobileMenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: var(--bg-primary);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 40;
+        transition: background-color 0.3s ease;
+    }
+} 

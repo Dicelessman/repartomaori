@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparto Maori TO4-Bra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="js/firebaseConfig.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/logout.js"></script>
+    <script type="module" src="js/ui.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Container per i toast -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+    
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold text-primary">Reparto Maori TO4-Bra</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="text-gray-600 hover:text-primary">Dashboard</a>
+                    <button id="logoutBtn" class="text-red-600 hover:text-red-800">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <div id="loading" class="flex items-center justify-center min-h-screen">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+
+            <div id="schedaContent" class="hidden">
+                <!-- Header con nome e controlli -->
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                    <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="nomeCompleto"></h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <a href="#" id="emailLink" class="text-primary hover:text-primary-light"></a>
+                            </p>
+                        </div>
+                        <div id="staffControls" class="hidden">
+                            <button id="editBtn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                                Modifica
+                            </button>
+                            <button id="saveBtn" class="hidden inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Salva
+                            </button>
+                            <button id="cancelBtn" class="hidden inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Annulla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Menu di navigazione -->
+                <div class="mb-6 bg-white shadow rounded-lg">
+                    <nav class="flex flex-wrap gap-2 p-4" aria-label="Tabs">
+                        <button onclick="mostraSezione('anagrafici')" class="px-3 py-2 text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-light">
+                            Informazioni Personali
+                        </button>
+                        <button onclick="mostraSezione('contatti')" class="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-primary hover:bg-gray-50">
+                            Contatti
+                        </button>
+                        <button onclick="mostraSezione('sanitarie')" class="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-primary hover:bg-gray-50">
+                            Informazioni Sanitarie
+                        </button>
+                        <button onclick="mostraSezione('progressione')" class="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-primary hover:bg-gray-50">
+                            Progressione Verticale
+                        </button>
+                        <button onclick="mostraSezione('specialita')" class="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-primary hover:bg-gray-50">
+                            Specialità
+                        </button>
+                        <button onclick="mostraSezione('eventi')" class="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-primary hover:bg-gray-50">
+                            Eventi
+                        </button>
+                        <button onclick="mostraSezione('documenti')" class="px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-primary hover:bg-gray-50">
+                            Documenti
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Sezioni della scheda -->
+                <div id="sezione-anagrafici" class="sezione">
+                    <!-- Contenuto sezione anagrafici -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Dati Anagrafici</h4>
+                        </div>
+                        <dl>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Data di Nascita</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="dataNascitaDisplay"></span>
+                                    <input type="date" id="dataNascitaEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Codice Fiscale</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="codiceFiscaleDisplay"></span>
+                                    <input type="text" id="codiceFiscaleEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </dd>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Indirizzo</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="indirizzoDisplay"></span>
+                                    <input type="text" id="indirizzoEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Telefono</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="telefonoDisplay"></div>
+                                    <input type="tel" id="telefonoEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <div class="mt-2 space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800" onclick="chiama('esploratore')">
+                                            📞 Chiama
+                                        </button>
+                                        <button class="text-green-600 hover:text-green-800" onclick="whatsapp('esploratore')">
+                                            💬 WhatsApp
+                                        </button>
+                                    </div>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div id="sezione-contatti" class="sezione hidden">
+                    <!-- Contenuto sezione contatti -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Contatti</h4>
+                        </div>
+                        <dl>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Genitore 1</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="genitore1Display"></div>
+                                    <div id="genitore1Edit" class="hidden space-y-2">
+                                        <input type="text" id="genitore1NomeEdit" placeholder="Nome" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <input type="email" id="genitore1EmailEdit" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <input type="tel" id="genitore1NumeroEdit" placeholder="Numero" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="mt-2 space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800" onclick="chiama('genitore1')">
+                                            📞 Chiama
+                                        </button>
+                                        <button class="text-green-600 hover:text-green-800" onclick="whatsapp('genitore1')">
+                                            💬 WhatsApp
+                                        </button>
+                                    </div>
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Genitore 2</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="genitore2Display"></div>
+                                    <div id="genitore2Edit" class="hidden space-y-2">
+                                        <input type="text" id="genitore2NomeEdit" placeholder="Nome" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <input type="email" id="genitore2EmailEdit" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <input type="tel" id="genitore2NumeroEdit" placeholder="Numero" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="mt-2 space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800" onclick="chiama('genitore2')">
+                                            📞 Chiama
+                                        </button>
+                                        <button class="text-green-600 hover:text-green-800" onclick="whatsapp('genitore2')">
+                                            💬 WhatsApp
+                                        </button>
+                                    </div>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div id="sezione-sanitarie" class="sezione hidden">
+                    <!-- Contenuto sezione sanitarie -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Informazioni Sanitarie</h4>
+                        </div>
+                        <dl>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Gruppo Sanguigno</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="gruppoSanguignoDisplay"></span>
+                                    <select id="gruppoSanguignoEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Seleziona gruppo sanguigno</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="0+">0+</option>
+                                        <option value="0-">0-</option>
+                                    </select>
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Intolleranze Alimentari</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="intolleranzeDisplay"></span>
+                                    <textarea id="intolleranzeEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+                                    <button class="mt-2 text-blue-600 hover:text-blue-800" onclick="copiaIntolleranze()">
+                                        📋 Copia
+                                    </button>
+                                </dd>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Allergie</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="allergieDisplay"></span>
+                                    <textarea id="allergieEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Farmaci</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <span id="farmaciDisplay"></span>
+                                    <textarea id="farmaciEdit" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div id="sezione-progressione" class="sezione hidden">
+                    <!-- Contenuto sezione progressione -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Progressione Verticale</h4>
+                        </div>
+                        <dl>
+                            <!-- Promessa -->
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Promessa</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <input type="date" id="promessaDataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+
+                            <!-- VCP/CP -->
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">VCP/CP</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center space-x-4">
+                                            <select id="vcpCpEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                                <option value="">Seleziona...</option>
+                                                <option value="VCP">VCP</option>
+                                                <option value="CP">CP</option>
+                                            </select>
+                                            <input type="date" id="vcpCpDataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+
+                            <!-- Giglio/Trifoglio -->
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Giglio/Trifoglio</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <input type="date" id="giglioTrifoglioDataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+
+                            <!-- Traccia 1 -->
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Traccia 1</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div class="space-y-4">
+                                        <!-- Categoria IO -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Io</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-1-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-1-1" class="ml-2 text-sm text-gray-700">IO-1.1 Conosco il mio corpo: Scelgo un'attività fisica che non pratico già e mi impegno per tre mesi a svolgerla in autonomia (...) e sulla base di questa propongo un'attività di esercizi per un'uscita di Reparto.</label>
+                                                    <input type="date" id="io-1-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-1-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-1-2" class="ml-2 text-sm text-gray-700">IO-1.2 Sono consapevole delle azioni e dei comportamenti che metto in atto: Per tre mesi mi impegno a tenere traccia dei momenti significativi delle mie giornate che associo ai valori di Legge e Promessa, condividendoli in Ptg/Eqp.</label>
+                                                    <input type="date" id="io-1-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-1-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-1-3" class="ml-2 text-sm text-gray-700">IO-1.3 Riconosco le emozioni: Supporto il CP/CE o una Terza Traccia nell'organizzazione di due momenti di verifica di Ptg/Eqp. Mi impegno a esprimere le mie opinioni nei momenti di verifica di Reparto.</label>
+                                                    <input type="date" id="io-1-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-1-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-1-4" class="ml-2 text-sm text-gray-700">IO-1.4 Esprimo liberamente la mia creatività: Trovo, o costruisco, un oggetto insolito ma utile al mio equipaggiamento per la vita di Reparto, hike o campi, e dopo averlo testato più volte lo presento e ne spiego il funzionamento in un momento di Reparto.</label>
+                                                    <input type="date" id="io-1-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria RE -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Le mie relazioni</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-1-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-1-1" class="ml-2 text-sm text-gray-700">RE-1.1 Riconosco il valore delle regole: Scelgo 3 articoli della Legge Scout e, durante una riunione di Reparto, porto per ognuno un esempio della vita di tutti i giorni in cui viene rispettato e uno in cui no.</label>
+                                                    <input type="date" id="re-1-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-1-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-1-2" class="ml-2 text-sm text-gray-700">RE-1.2 Comunico il mio punto di vista: Mi occupo insieme alla mia Ptg/Eqp di organizzare un momento di animazione per il Reparto, collaborando attivamente con tutti, e lo uso come spunto per migliorare la proposta di una seconda attività.</label>
+                                                    <input type="date" id="re-1-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-1-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-1-3" class="ml-2 text-sm text-gray-700">RE-1.3 Partecipo attivamente alla vita del gruppo: Sperimento almeno 3 Posti d'Azione e 2 Incarichi diversi, seguendo l'esempio di chi li ha tenuti prima di me.</label>
+                                                    <input type="date" id="re-1-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-1-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-1-4" class="ml-2 text-sm text-gray-700">RE-1.4 Riconosco l'unicita e la peculiarità degli altri: Per tre mesi mi occupo di raccontare le personalità dei membri della mia Ptg/Eqp attraverso racconti/immagini/video (...).</label>
+                                                    <input type="date" id="re-1-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria IM -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Il mio impatto</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-1-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-1-1" class="ml-2 text-sm text-gray-700">IM-1.1 Identifico dei progetti personali che voglio portare avanti: Propongo un gioco nuovo al mio Reparto o Ptg/Eqp, spiegando il regolamento ed aiutando i capi nel gestirlo.</label>
+                                                    <input type="date" id="im-1-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-1-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-1-2" class="ml-2 text-sm text-gray-700">IM-1.2 Scopro quali sono le mie competenze: Conquisto almeno 3 specialità di mio interesse.</label>
+                                                    <input type="date" id="im-1-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-1-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-1-3" class="ml-2 text-sm text-gray-700">IM-1.3 Osservo criticamente il contesto in cui opero: In Ptg/Eqp propongo, disegno e realizzo (in collaborazione con gli altri, se ho bisogno) almeno due migliorie utili alla vita di Ptg/Eqp/ al campo/ all'angolo in sede.</label>
+                                                    <input type="date" id="im-1-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-1-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-1-4" class="ml-2 text-sm text-gray-700">IM-1.4 Mi approccio con curiosità alle novità: Dopo aver vissuto un'esperienza scout con o senza il mio Rep/Ptg/Eqp, documento e racconto come l'ho vissuta.</label>
+                                                    <input type="date" id="im-1-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+
+                            <!-- Traccia 2 -->
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Traccia 2</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div class="space-y-4">
+                                        <!-- Categoria IO -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Io</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-2-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-2-1" class="ml-2 text-sm text-gray-700">IO-2.1 Esploro i limiti del mio corpo confrontandomi con me stesso e con gli altri: Collaboro (con un capo/senior) nell'ideare un menù bilanciato e salutare per due uscite/campi di Reparto, ampliando poi il ricettario della mia Ptg/Eqp.</label>
+                                                    <input type="date" id="io-2-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-2-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-2-2" class="ml-2 text-sm text-gray-700">IO-2.2 Identifico le motivazioni dietro le mie azioni: Contribuisco all'organizzazione di un'attività del percorso Promessa o CdL ideata dallo Staff, portando un contributo basato sulle esperienze che mi toccano da vicino o ho letto/visto.</label>
+                                                    <input type="date" id="io-2-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-2-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-2-3" class="ml-2 text-sm text-gray-700">IO-2.3 Esploro con curiosità le esperienze che vivo: Partecipo ad un evento al di fuori del Reparto (...) e al mio ritorno porto al Reparto il racconto dell'esperienza (...) evidenziando "Lo consiglierei ad altri Esplo? perchè?".</label>
+                                                    <input type="date" id="io-2-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-2-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-2-4" class="ml-2 text-sm text-gray-700">IO-2.4 Sono aperto a mettere in discussione le mie idee ed opinioni: Propongo per una riunione di Ptg/Eqp un'esperienza che riguardi un tema per me importante (...), al termine del quale aiuto a condurre un confronto su come io e gli altri lo abbiamo vissuto.</label>
+                                                    <input type="date" id="io-2-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria RE -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Le mie relazioni</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-2-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-2-1" class="ml-2 text-sm text-gray-700">RE-2.1 Mi chiedo il perché delle regole: Aiuto nel definire e far rispettare un patto scritto di regole interno alla Ptg/Eqp o Reparto per almeno un evento (...).</label>
+                                                    <input type="date" id="re-2-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-2-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-2-2" class="ml-2 text-sm text-gray-700">RE-2.2 Utilizzo con consapevolezza le varie modalità di comunicazione: Partecipo attivamente alla progettazione e realizzazione dell'animazione di un fuoco di bivacco, prima di Ptg/Eqp e poi di Reparto/Gruppo, curandone tema e messaggi.</label>
+                                                    <input type="date" id="re-2-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-2-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-2-3" class="ml-2 text-sm text-gray-700">RE-2.3 Vivo serenamente il confronto con l'altro: Propongo un'uscita di Ptg/Eqp di conoscenza fuori dal Reparto (...) e collaboro attivamente alla sua riuscita.</label>
+                                                    <input type="date" id="re-2-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-2-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-2-4" class="ml-2 text-sm text-gray-700">RE-2.4 Conosco e rispetto i bisogni e le necessità di chi mi sta intorno: Mi impegno a conquistare due specialità di Impegno Civile facendo squadra ogni volta con un altro/a Esplo con cui ho legato meno del Reparto.</label>
+                                                    <input type="date" id="re-2-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria IM -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Il mio impatto</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-2-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-2-1" class="ml-2 text-sm text-gray-700">IM-2.1 Contribuisco attivamente ai progetti di gruppo: Porto una mia idea motivata in consiglio di Ptg/Eqp per un progetto o attività da fare insieme e contribuisco alla sua realizzazione (...).</label>
+                                                    <input type="date" id="im-2-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-2-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-2-2" class="ml-2 text-sm text-gray-700">IM-2.2 Sono parte attiva nel gruppo: Organizzo un momento per gli altri, da solo o con l'aiuto della Ptg/Eqp, in cui porto e condivido le mie competenze in un ambito che mi piace (...).</label>
+                                                    <input type="date" id="im-2-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-2-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-2-3" class="ml-2 text-sm text-gray-700">IM-2.3 Partecipo alle decisioni strategiche del gruppo: Contribuisco a identificare aspetti da poter migliorare nella vita di Ptg/Eqp durante almeno due CdP e mi propongo nei ruoli che li risolvano, verificando poi com'è andata.</label>
+                                                    <input type="date" id="im-2-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-2-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-2-4" class="ml-2 text-sm text-gray-700">IM-2.4 Confronto più punti di vista per strutturare la mia opinione: Svolgo una ricerca utile alla mia Ptg/Eqp oppure Reparto organizzando e conducendo diverse interviste (...) mettendo insieme il risultato per presentarlo in una riunione.</label>
+                                                    <input type="date" id="im-2-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+
+                            <!-- Traccia 3 -->
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Traccia 3</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div class="space-y-4">
+                                        <!-- Categoria IO -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Io</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-3-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-3-1" class="ml-2 text-sm text-gray-700">IO-3.1 Affronto le sfide che incontro con serenità: Partecipo ad un'occasione al di fuori del Reparto (...), riportando qualcosa della mia esperienza con un'attività in Ptg/Eqp/Reparto.</label>
+                                                    <input type="date" id="io-3-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-3-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-3-2" class="ml-2 text-sm text-gray-700">IO-3.2 Sono coerente e d'esempio in tutti gli ambienti in cui vivo: Faccio da tutor ad un nuovo/a Esplo della mia Ptg/Eqp per 6 mesi nella conquista della specialità e/o nell'affrontare le sue sfide per il raggiungimento della Traccia.</label>
+                                                    <input type="date" id="io-3-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-3-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-3-3" class="ml-2 text-sm text-gray-700">IO-3.3 Riconosco l'importanza del mio benessere: Preparo un momento a tema benessere e dipendenze da poter inserire in un'attività di CdR/Alta Pattuglia/gruppo delle III tracce, confrontandomi con lo staff e portando il mio punto di vista ed esperienza.</label>
+                                                    <input type="date" id="io-3-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="io-3-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="io-3-4" class="ml-2 text-sm text-gray-700">IO-3.4 Interagisco con gli altri per risolvere le sfide comuni: Organizzo almeno tre momenti di verifica con la mia Ptg/Eqp riportando o facendo riportare sul verbale le soluzioni alternative ai problemi che abbiamo individuato, riferendo poi tutto al CR.</label>
+                                                    <input type="date" id="io-3-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria RE -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Le mie relazioni</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-3-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-3-1" class="ml-2 text-sm text-gray-700">RE-3.1 Sono d'esempio e promuovo occasioni di conivolgimento nel gruppo: Organizzo e conduco 2 momenti o attività di confronto e discussione di cui uno di Ptg/Eqp e dopo uno con tutto il Reparto.</label>
+                                                    <input type="date" id="re-3-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-3-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-3-2" class="ml-2 text-sm text-gray-700">RE-3.2 Trasmetto e riconosco le mie emozioni: Con l'aiuto dello staff, organizzo e poi gestisco un'attività sulla sessualità ed affettività da proporre durante un'uscita in Reparto.</label>
+                                                    <input type="date" id="re-3-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-3-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-3-3" class="ml-2 text-sm text-gray-700">RE-3.3 Creo un ambiente sicuro, accogliente e pacifico per tutti: Coordino gli altri CP/VCP per organizzare e gestire, con l'aiuto dello Staff, un'attività di accoglienza o conoscenza (...).</label>
+                                                    <input type="date" id="re-3-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="re-3-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="re-3-4" class="ml-2 text-sm text-gray-700">RE-3.4 Valorizzo le idee e le caratteristiche dei miei compagni: Per tre mesi mi occupo di raccontare le esperienze vissute in Ptg/Eqp/Reparto (...), ricordando le gesta e caratteristiche dei miei compagni.</label>
+                                                    <input type="date" id="re-3-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria IM -->
+                                        <div class="border rounded-lg p-4">
+                                            <h5 class="font-medium mb-2">Il mio impatto</h5>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-3-1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-3-1" class="ml-2 text-sm text-gray-700">IM-3.1 Coordino i progetti di gruppo, valorizzando i miei collaboratori: Propongo e guido la mia Ptg/Eqp nella conquista di una specialità di Ptg/Eqp.</label>
+                                                    <input type="date" id="im-3-1-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-3-2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-3-2" class="ml-2 text-sm text-gray-700">IM-3.2 Condivido competenze ed esperienze con il resto del gruppo: Organizzo un momento di trapasso nozioni in Ptg/Eqp/Reparto su un aspetto specifico o innovativo per una tecnica (anche non scout) in cui sono competente.</label>
+                                                    <input type="date" id="im-3-2-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-3-3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-3-3" class="ml-2 text-sm text-gray-700">IM-3.3 Porto avanti le mie idee democraticamente e nel rispetto dell'opinione altrui: Propongo, progetto e conduco un confronto o dibattito in cui coinvolgo Ptg/Eqp/III tracce/CdR/Alta ptg, su un tema a me caro.</label>
+                                                    <input type="date" id="im-3-3-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="im-3-4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                                    <label for="im-3-4" class="ml-2 text-sm text-gray-700">IM-3.4 Immagino, pianifico e realizzo i miei obiettivi e quelli del gruppo: Pianifico e gestisco la partecipazione di Ptg/Eqp/CdR/Alta ptg ad un evento legato ad un tema che a me interessa, proponendoci per svolgere per l'occasione un servizio.</label>
+                                                    <input type="date" id="im-3-4-data" class="ml-4 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div id="sezione-specialita" class="sezione hidden">
+                    <!-- Contenuto sezione specialità -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Specialità</h4>
+                        </div>
+                        <div class="px-4 py-5 sm:px-6">
+                            <div id="specialitaList" class="space-y-4">
+                                <!-- Le specialità verranno aggiunte dinamicamente -->
+                            </div>
+                            <button id="aggiungiSpecialitaBtn" class="hidden mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Aggiungi Specialità
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sezione-eventi" class="sezione hidden">
+                    <!-- Contenuto sezione eventi -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Eventi</h4>
+                        </div>
+                        <dl>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Campi Estivi</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="campiEstiviDisplay"></div>
+                                    <div id="campiEstiviEdit" class="hidden space-y-4">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <input type="text" id="campoEstivo1LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="campoEstivo1AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <input type="text" id="campoEstivo2LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="campoEstivo2AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <input type="text" id="campoEstivo3LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="campoEstivo3AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <input type="text" id="campoEstivo4LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="campoEstivo4AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Tecnicamp</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="tecnicampDisplay"></div>
+                                    <div id="tecnicampEdit" class="hidden space-y-4">
+                                        <div class="grid grid-cols-3 gap-4">
+                                            <input type="text" id="tecnicamp1LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="text" id="tecnicamp1CorsoEdit" placeholder="Corso" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="tecnicamp1AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4">
+                                            <input type="text" id="tecnicamp2LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="text" id="tecnicamp2CorsoEdit" placeholder="Corso" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="tecnicamp2AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4">
+                                            <input type="text" id="tecnicamp3LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="text" id="tecnicamp3CorsoEdit" placeholder="Corso" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="tecnicamp3AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4">
+                                            <input type="text" id="tecnicamp4LuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="text" id="tecnicamp4CorsoEdit" placeholder="Corso" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="tecnicamp4AnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Jamboree</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="jamboreeDisplay"></div>
+                                    <div id="jamboreeEdit" class="hidden space-y-4">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <input type="text" id="jamboreeLuogoEdit" placeholder="Luogo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="date" id="jamboreeAnnoEdit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div id="sezione-documenti" class="sezione hidden">
+                    <!-- Contenuto sezione documenti -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h4 class="text-lg font-medium text-gray-900">Documenti</h4>
+                        </div>
+                        <dl>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Quota Annuale</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="quotaAnnualeDisplay"></div>
+                                    <div id="quotaAnnualeEdit" class="hidden space-y-4">
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="quotaAnnuale1DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="quotaAnnuale1CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="quotaAnnuale2DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="quotaAnnuale2CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="quotaAnnuale3DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="quotaAnnuale3CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="quotaAnnuale4DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="quotaAnnuale4CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Modulo Iscrizione</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="moduloIscrizioneDisplay"></div>
+                                    <div id="moduloIscrizioneEdit" class="hidden">
+                                        <input type="checkbox" id="moduloIscrizioneCheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    </div>
+                                </dd>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Modulo Sanitario</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="moduloSanitarioDisplay"></div>
+                                    <div id="moduloSanitarioEdit" class="hidden space-y-4">
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloSanitario1DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloSanitario1CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloSanitario2DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloSanitario2CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloSanitario3DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloSanitario3CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloSanitario4DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloSanitario4CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Modulo Privacy</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <div id="moduloPrivacyDisplay"></div>
+                                    <div id="moduloPrivacyEdit" class="hidden space-y-4">
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloPrivacy1DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloPrivacy1CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloPrivacy2DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloPrivacy2CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloPrivacy3DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloPrivacy3CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="date" id="moduloPrivacy4DataEdit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="checkbox" id="moduloPrivacy4CheckEdit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        </div>
+                                    </div>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { auth } from './js/firebaseConfig.js';
+        import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { db } from './js/firebaseConfig.js';
+
+        const loading = document.getElementById('loading');
+        const schedaContent = document.getElementById('schedaContent');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const staffControls = document.getElementById('staffControls');
+        const editBtn = document.getElementById('editBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const aggiungiSpecialitaBtn = document.getElementById('aggiungiSpecialitaBtn');
+
+        let currentUserData = null;
+        let isStaff = false;
+        let isEditing = false;
+
+        // Funzioni di utilità
+        window.chiama = (tipo) => {
+            let numero;
+            if (tipo === 'esploratore') {
+                numero = document.getElementById('telefonoDisplay').textContent;
+            } else {
+                numero = document.getElementById(`${tipo}Numero`).textContent;
+            }
+            window.location.href = `tel:${numero}`;
+        };
+
+        window.whatsapp = (tipo) => {
+            let numero;
+            if (tipo === 'esploratore') {
+                numero = document.getElementById('telefonoDisplay').textContent;
+            } else {
+                numero = document.getElementById(`${tipo}Numero`).textContent;
+            }
+            window.location.href = `https://wa.me/${numero}`;
+        };
+
+        window.copiaIntolleranze = () => {
+            const intolleranze = document.getElementById('intolleranzeDisplay').textContent;
+            navigator.clipboard.writeText(intolleranze);
+        };
+
+        // Funzioni per la gestione della modalità di modifica
+        function enterEditMode() {
+            isEditing = true;
+            editBtn.classList.add('hidden');
+            saveBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+            aggiungiSpecialitaBtn.classList.remove('hidden');
+
+            // Mostra tutti i campi di modifica
+            document.querySelectorAll('[id$="Edit"]').forEach(el => {
+                if (el.id !== 'editBtn' && el.id !== 'saveBtn' && el.id !== 'cancelBtn') {
+                    el.classList.remove('hidden');
+                }
+            });
+
+            // Nascondi tutti i campi di visualizzazione
+            document.querySelectorAll('[id$="Display"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+
+        function exitEditMode() {
+            isEditing = false;
+            editBtn.classList.remove('hidden');
+            saveBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+            aggiungiSpecialitaBtn.classList.add('hidden');
+
+            // Nascondi tutti i campi di modifica
+            document.querySelectorAll('[id$="Edit"]').forEach(el => {
+                if (el.id !== 'editBtn' && el.id !== 'saveBtn' && el.id !== 'cancelBtn') {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Mostra tutti i campi di visualizzazione
+            document.querySelectorAll('[id$="Display"]').forEach(el => {
+                el.classList.remove('hidden');
+            });
+
+            // Ripristina i valori originali
+            populateDisplayFields(currentUserData);
+        }
+
+        // Funzioni per il popolamento dei campi
+        function populateDisplayFields(userData) {
+            // Funzione di utilità per impostare il testo in modo sicuro
+            function setTextContent(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value || '-';
+                }
+            }
+
+            // Funzione di utilità per impostare l'HTML in modo sicuro
+            function setInnerHTML(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = value || 'Nessun dato disponibile';
+                }
+            }
+
+            // Dati anagrafici
+            setTextContent('dataNascitaDisplay', userData.datiScheda?.anagrafici?.dataNascita);
+            setTextContent('codiceFiscaleDisplay', userData.datiScheda?.anagrafici?.codiceFiscale);
+            setTextContent('indirizzoDisplay', userData.datiScheda?.anagrafici?.indirizzo);
+            setTextContent('telefonoDisplay', userData.datiScheda?.anagrafici?.telefono);
+
+            // Contatti
+            const genitore1 = userData.datiScheda?.contatti?.genitore1;
+            const genitore2 = userData.datiScheda?.contatti?.genitore2;
+
+            setInnerHTML('genitore1Display', genitore1 ? `
+                <div>Nome: ${genitore1.nome || '-'}</div>
+                <div>Email: ${genitore1.email || '-'}</div>
+                <div id="genitore1Numero">Numero: ${genitore1.numero || '-'}</div>
+            ` : 'Nessun dato disponibile');
+
+            setInnerHTML('genitore2Display', genitore2 ? `
+                <div>Nome: ${genitore2.nome || '-'}</div>
+                <div>Email: ${genitore2.email || '-'}</div>
+                <div id="genitore2Numero">Numero: ${genitore2.numero || '-'}</div>
+            ` : 'Nessun dato disponibile');
+
+            // Informazioni sanitarie
+            setTextContent('gruppoSanguignoDisplay', userData.datiScheda?.sanitarie?.gruppoSanguigno);
+            setTextContent('intolleranzeDisplay', userData.datiScheda?.sanitarie?.intolleranze);
+            setTextContent('allergieDisplay', userData.datiScheda?.sanitarie?.allergie);
+            setTextContent('farmaciDisplay', userData.datiScheda?.sanitarie?.farmaci);
+
+            // Progressione Verticale
+            setTextContent('promessaDisplay', userData.datiScheda?.progressione?.promessa);
+            
+            const primaTraccia = userData.datiScheda?.progressione?.primaTraccia;
+            setInnerHTML('primaTracciaDisplay', primaTraccia ? `
+                <div>Data: ${primaTraccia.data || '-'}</div>
+                <div>Sfida: ${primaTraccia.sfida || '-'}</div>
+            ` : 'Nessun dato disponibile');
+
+            const secondaTraccia = userData.datiScheda?.progressione?.secondaTraccia;
+            setInnerHTML('secondaTracciaDisplay', secondaTraccia ? `
+                <div>Data: ${secondaTraccia.data || '-'}</div>
+                <div>Sfida: ${secondaTraccia.sfida || '-'}</div>
+            ` : 'Nessun dato disponibile');
+
+            const terzaTraccia = userData.datiScheda?.progressione?.terzaTraccia;
+            setInnerHTML('terzaTracciaDisplay', terzaTraccia ? `
+                <div>Data: ${terzaTraccia.data || '-'}</div>
+                <div>Sfida: ${terzaTraccia.sfida || '-'}</div>
+            ` : 'Nessun dato disponibile');
+
+            // Eventi
+            const campiEstivi = userData.datiScheda?.eventi?.campiEstivi;
+            setInnerHTML('campiEstiviDisplay', campiEstivi ? `
+                <div>Campo 1: ${campiEstivi[1]?.luogo || '-'} (${campiEstivi[1]?.anno || '-'})</div>
+                <div>Campo 2: ${campiEstivi[2]?.luogo || '-'} (${campiEstivi[2]?.anno || '-'})</div>
+                <div>Campo 3: ${campiEstivi[3]?.luogo || '-'} (${campiEstivi[3]?.anno || '-'})</div>
+                <div>Campo 4: ${campiEstivi[4]?.luogo || '-'} (${campiEstivi[4]?.anno || '-'})</div>
+            ` : 'Nessun dato disponibile');
+
+            const tecnicamp = userData.datiScheda?.eventi?.tecnicamp;
+            setInnerHTML('tecnicampDisplay', tecnicamp ? `
+                <div>Tecnicamp 1: ${tecnicamp[1]?.luogo || '-'} - ${tecnicamp[1]?.corso || '-'} (${tecnicamp[1]?.anno || '-'})</div>
+                <div>Tecnicamp 2: ${tecnicamp[2]?.luogo || '-'} - ${tecnicamp[2]?.corso || '-'} (${tecnicamp[2]?.anno || '-'})</div>
+                <div>Tecnicamp 3: ${tecnicamp[3]?.luogo || '-'} - ${tecnicamp[3]?.corso || '-'} (${tecnicamp[3]?.anno || '-'})</div>
+                <div>Tecnicamp 4: ${tecnicamp[4]?.luogo || '-'} - ${tecnicamp[4]?.corso || '-'} (${tecnicamp[4]?.anno || '-'})</div>
+            ` : 'Nessun dato disponibile');
+
+            const jamboree = userData.datiScheda?.eventi?.jamboree;
+            setInnerHTML('jamboreeDisplay', jamboree ? `
+                <div>Jamboree: ${jamboree.luogo || '-'} (${jamboree.anno || '-'})</div>
+            ` : 'Nessun dato disponibile');
+
+            // Documenti
+            const quotaAnnuale = userData.datiScheda?.documenti?.quotaAnnuale;
+            setInnerHTML('quotaAnnualeDisplay', quotaAnnuale ? `
+                <div>Quota 1: ${quotaAnnuale[1]?.data || '-'} ${quotaAnnuale[1]?.pagata ? '✓' : '✗'}</div>
+                <div>Quota 2: ${quotaAnnuale[2]?.data || '-'} ${quotaAnnuale[2]?.pagata ? '✓' : '✗'}</div>
+                <div>Quota 3: ${quotaAnnuale[3]?.data || '-'} ${quotaAnnuale[3]?.pagata ? '✓' : '✗'}</div>
+                <div>Quota 4: ${quotaAnnuale[4]?.data || '-'} ${quotaAnnuale[4]?.pagata ? '✓' : '✗'}</div>
+            ` : 'Nessun dato disponibile');
+
+            const moduloIscrizione = userData.datiScheda?.documenti?.moduloIscrizione;
+            setInnerHTML('moduloIscrizioneDisplay', moduloIscrizione ? `
+                <div>Modulo Iscrizione: ${moduloIscrizione.presente ? '✓' : '✗'}</div>
+            ` : 'Nessun dato disponibile');
+
+            const moduloSanitario = userData.datiScheda?.documenti?.moduloSanitario;
+            setInnerHTML('moduloSanitarioDisplay', moduloSanitario ? `
+                <div>Modulo 1: ${moduloSanitario[1]?.data || '-'} ${moduloSanitario[1]?.presente ? '✓' : '✗'}</div>
+                <div>Modulo 2: ${moduloSanitario[2]?.data || '-'} ${moduloSanitario[2]?.presente ? '✓' : '✗'}</div>
+                <div>Modulo 3: ${moduloSanitario[3]?.data || '-'} ${moduloSanitario[3]?.presente ? '✓' : '✗'}</div>
+                <div>Modulo 4: ${moduloSanitario[4]?.data || '-'} ${moduloSanitario[4]?.presente ? '✓' : '✗'}</div>
+            ` : 'Nessun dato disponibile');
+
+            const moduloPrivacy = userData.datiScheda?.documenti?.moduloPrivacy;
+            setInnerHTML('moduloPrivacyDisplay', moduloPrivacy ? `
+                <div>Modulo 1: ${moduloPrivacy[1]?.data || '-'} ${moduloPrivacy[1]?.presente ? '✓' : '✗'}</div>
+                <div>Modulo 2: ${moduloPrivacy[2]?.data || '-'} ${moduloPrivacy[2]?.presente ? '✓' : '✗'}</div>
+                <div>Modulo 3: ${moduloPrivacy[3]?.data || '-'} ${moduloPrivacy[3]?.presente ? '✓' : '✗'}</div>
+                <div>Modulo 4: ${moduloPrivacy[4]?.data || '-'} ${moduloPrivacy[4]?.presente ? '✓' : '✗'}</div>
+            ` : 'Nessun dato disponibile');
+        }
+
+        function populateEditFields(userData) {
+            // Funzione di utilità per impostare il valore in modo sicuro
+            function setValue(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.value = value || '';
+                }
+            }
+
+            // Funzione di utilità per impostare lo stato del checkbox in modo sicuro
+            function setChecked(elementId, checked) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.checked = checked || false;
+                }
+            }
+
+            // Dati anagrafici
+            setValue('dataNascitaEdit', userData.datiScheda?.anagrafici?.dataNascita);
+            setValue('codiceFiscaleEdit', userData.datiScheda?.anagrafici?.codiceFiscale);
+            setValue('indirizzoEdit', userData.datiScheda?.anagrafici?.indirizzo);
+            setValue('telefonoEdit', userData.datiScheda?.anagrafici?.telefono);
+
+            // Contatti
+            const genitore1 = userData.datiScheda?.contatti?.genitore1;
+            const genitore2 = userData.datiScheda?.contatti?.genitore2;
+
+            setValue('genitore1NomeEdit', genitore1?.nome);
+            setValue('genitore1EmailEdit', genitore1?.email);
+            setValue('genitore1NumeroEdit', genitore1?.numero);
+
+            setValue('genitore2NomeEdit', genitore2?.nome);
+            setValue('genitore2EmailEdit', genitore2?.email);
+            setValue('genitore2NumeroEdit', genitore2?.numero);
+
+            // Informazioni sanitarie
+            setValue('gruppoSanguignoEdit', userData.datiScheda?.sanitarie?.gruppoSanguigno);
+            setValue('intolleranzeEdit', userData.datiScheda?.sanitarie?.intolleranze);
+            setValue('allergieEdit', userData.datiScheda?.sanitarie?.allergie);
+            setValue('farmaciEdit', userData.datiScheda?.sanitarie?.farmaci);
+
+            // Progressione verticale
+            setValue('promessaEdit', userData.datiScheda?.progressione?.promessa);
+            
+            const primaTraccia = userData.datiScheda?.progressione?.primaTraccia;
+            setValue('primaTracciaDataEdit', primaTraccia?.data);
+            setValue('primaTracciaSfidaEdit', primaTraccia?.sfida);
+
+            const secondaTraccia = userData.datiScheda?.progressione?.secondaTraccia;
+            setValue('secondaTracciaDataEdit', secondaTraccia?.data);
+            setValue('secondaTracciaSfidaEdit', secondaTraccia?.sfida);
+
+            const terzaTraccia = userData.datiScheda?.progressione?.terzaTraccia;
+            setValue('terzaTracciaDataEdit', terzaTraccia?.data);
+            setValue('terzaTracciaSfidaEdit', terzaTraccia?.sfida);
+
+            // Eventi
+            const campiEstivi = userData.datiScheda?.eventi?.campiEstivi;
+            setValue('campoEstivo1LuogoEdit', campiEstivi?.[1]?.luogo);
+            setValue('campoEstivo1AnnoEdit', campiEstivi?.[1]?.anno);
+            setValue('campoEstivo2LuogoEdit', campiEstivi?.[2]?.luogo);
+            setValue('campoEstivo2AnnoEdit', campiEstivi?.[2]?.anno);
+            setValue('campoEstivo3LuogoEdit', campiEstivi?.[3]?.luogo);
+            setValue('campoEstivo3AnnoEdit', campiEstivi?.[3]?.anno);
+            setValue('campoEstivo4LuogoEdit', campiEstivi?.[4]?.luogo);
+            setValue('campoEstivo4AnnoEdit', campiEstivi?.[4]?.anno);
+
+            const tecnicamp = userData.datiScheda?.eventi?.tecnicamp;
+            setValue('tecnicamp1LuogoEdit', tecnicamp?.[1]?.luogo);
+            setValue('tecnicamp1CorsoEdit', tecnicamp?.[1]?.corso);
+            setValue('tecnicamp1AnnoEdit', tecnicamp?.[1]?.anno);
+            setValue('tecnicamp2LuogoEdit', tecnicamp?.[2]?.luogo);
+            setValue('tecnicamp2CorsoEdit', tecnicamp?.[2]?.corso);
+            setValue('tecnicamp2AnnoEdit', tecnicamp?.[2]?.anno);
+            setValue('tecnicamp3LuogoEdit', tecnicamp?.[3]?.luogo);
+            setValue('tecnicamp3CorsoEdit', tecnicamp?.[3]?.corso);
+            setValue('tecnicamp3AnnoEdit', tecnicamp?.[3]?.anno);
+            setValue('tecnicamp4LuogoEdit', tecnicamp?.[4]?.luogo);
+            setValue('tecnicamp4CorsoEdit', tecnicamp?.[4]?.corso);
+            setValue('tecnicamp4AnnoEdit', tecnicamp?.[4]?.anno);
+
+            const jamboree = userData.datiScheda?.eventi?.jamboree;
+            setValue('jamboreeLuogoEdit', jamboree?.luogo);
+            setValue('jamboreeAnnoEdit', jamboree?.anno);
+
+            // Documenti
+            const quotaAnnuale = userData.datiScheda?.documenti?.quotaAnnuale;
+            const moduloIscrizione = userData.datiScheda?.documenti?.moduloIscrizione;
+            const moduloSanitario = userData.datiScheda?.documenti?.moduloSanitario;
+            const moduloPrivacy = userData.datiScheda?.documenti?.moduloPrivacy;
+
+            setValue('quotaAnnuale1DataEdit', quotaAnnuale?.[1]?.data);
+            setChecked('quotaAnnuale1CheckEdit', quotaAnnuale?.[1]?.pagata);
+            setValue('quotaAnnuale2DataEdit', quotaAnnuale?.[2]?.data);
+            setChecked('quotaAnnuale2CheckEdit', quotaAnnuale?.[2]?.pagata);
+            setValue('quotaAnnuale3DataEdit', quotaAnnuale?.[3]?.data);
+            setChecked('quotaAnnuale3CheckEdit', quotaAnnuale?.[3]?.pagata);
+            setValue('quotaAnnuale4DataEdit', quotaAnnuale?.[4]?.data);
+            setChecked('quotaAnnuale4CheckEdit', quotaAnnuale?.[4]?.pagata);
+
+            setChecked('moduloIscrizioneCheckEdit', moduloIscrizione?.presente);
+
+            setValue('moduloSanitario1DataEdit', moduloSanitario?.[1]?.data);
+            setChecked('moduloSanitario1CheckEdit', moduloSanitario?.[1]?.presente);
+            setValue('moduloSanitario2DataEdit', moduloSanitario?.[2]?.data);
+            setChecked('moduloSanitario2CheckEdit', moduloSanitario?.[2]?.presente);
+            setValue('moduloSanitario3DataEdit', moduloSanitario?.[3]?.data);
+            setChecked('moduloSanitario3CheckEdit', moduloSanitario?.[3]?.presente);
+            setValue('moduloSanitario4DataEdit', moduloSanitario?.[4]?.data);
+            setChecked('moduloSanitario4CheckEdit', moduloSanitario?.[4]?.presente);
+
+            setValue('moduloPrivacy1DataEdit', moduloPrivacy?.[1]?.data);
+            setChecked('moduloPrivacy1CheckEdit', moduloPrivacy?.[1]?.presente);
+            setValue('moduloPrivacy2DataEdit', moduloPrivacy?.[2]?.data);
+            setChecked('moduloPrivacy2CheckEdit', moduloPrivacy?.[2]?.presente);
+            setValue('moduloPrivacy3DataEdit', moduloPrivacy?.[3]?.data);
+            setChecked('moduloPrivacy3CheckEdit', moduloPrivacy?.[3]?.presente);
+            setValue('moduloPrivacy4DataEdit', moduloPrivacy?.[4]?.data);
+            setChecked('moduloPrivacy4CheckEdit', moduloPrivacy?.[4]?.presente);
+        }
+
+        // Funzione per salvare i dati
+        async function saveData(userId) {
+            const userData = {
+                datiScheda: {
+                    anagrafici: {
+                        dataNascita: document.getElementById('dataNascitaEdit').value,
+                        codiceFiscale: document.getElementById('codiceFiscaleEdit').value,
+                        indirizzo: document.getElementById('indirizzoEdit').value,
+                        telefono: document.getElementById('telefonoEdit').value
+                    },
+                    contatti: {
+                        genitore1: {
+                            nome: document.getElementById('genitore1NomeEdit').value,
+                            email: document.getElementById('genitore1EmailEdit').value,
+                            numero: document.getElementById('genitore1NumeroEdit').value
+                        },
+                        genitore2: {
+                            nome: document.getElementById('genitore2NomeEdit').value,
+                            email: document.getElementById('genitore2EmailEdit').value,
+                            numero: document.getElementById('genitore2NumeroEdit').value
+                        }
+                    },
+                    sanitarie: {
+                        gruppoSanguigno: document.getElementById('gruppoSanguignoEdit').value,
+                        intolleranze: document.getElementById('intolleranzeEdit').value,
+                        allergie: document.getElementById('allergieEdit').value,
+                        farmaci: document.getElementById('farmaciEdit').value
+                    },
+                    progressione: {
+                        promessa: document.getElementById('promessaEdit').value,
+                        primaTraccia: {
+                            data: document.getElementById('primaTracciaDataEdit').value,
+                            sfida: document.getElementById('primaTracciaSfidaEdit').value
+                        },
+                        secondaTraccia: {
+                            data: document.getElementById('secondaTracciaDataEdit').value,
+                            sfida: document.getElementById('secondaTracciaSfidaEdit').value
+                        },
+                        terzaTraccia: {
+                            data: document.getElementById('terzaTracciaDataEdit').value,
+                            sfida: document.getElementById('terzaTracciaSfidaEdit').value
+                        }
+                    },
+                    eventi: {
+                        campiEstivi: {
+                            1: {
+                                luogo: document.getElementById('campoEstivo1LuogoEdit').value,
+                                anno: document.getElementById('campoEstivo1AnnoEdit').value
+                            },
+                            2: {
+                                luogo: document.getElementById('campoEstivo2LuogoEdit').value,
+                                anno: document.getElementById('campoEstivo2AnnoEdit').value
+                            },
+                            3: {
+                                luogo: document.getElementById('campoEstivo3LuogoEdit').value,
+                                anno: document.getElementById('campoEstivo3AnnoEdit').value
+                            },
+                            4: {
+                                luogo: document.getElementById('campoEstivo4LuogoEdit').value,
+                                anno: document.getElementById('campoEstivo4AnnoEdit').value
+                            }
+                        },
+                        tecnicamp: {
+                            1: {
+                                luogo: document.getElementById('tecnicamp1LuogoEdit').value,
+                                corso: document.getElementById('tecnicamp1CorsoEdit').value,
+                                anno: document.getElementById('tecnicamp1AnnoEdit').value
+                            },
+                            2: {
+                                luogo: document.getElementById('tecnicamp2LuogoEdit').value,
+                                corso: document.getElementById('tecnicamp2CorsoEdit').value,
+                                anno: document.getElementById('tecnicamp2AnnoEdit').value
+                            },
+                            3: {
+                                luogo: document.getElementById('tecnicamp3LuogoEdit').value,
+                                corso: document.getElementById('tecnicamp3CorsoEdit').value,
+                                anno: document.getElementById('tecnicamp3AnnoEdit').value
+                            },
+                            4: {
+                                luogo: document.getElementById('tecnicamp4LuogoEdit').value,
+                                corso: document.getElementById('tecnicamp4CorsoEdit').value,
+                                anno: document.getElementById('tecnicamp4AnnoEdit').value
+                            }
+                        },
+                        jamboree: {
+                            luogo: document.getElementById('jamboreeLuogoEdit').value,
+                            anno: document.getElementById('jamboreeAnnoEdit').value
+                        }
+                    },
+                    documenti: {
+                        quotaAnnuale: {
+                            1: {
+                                data: document.getElementById('quotaAnnuale1DataEdit').value,
+                                pagata: document.getElementById('quotaAnnuale1CheckEdit').checked
+                            },
+                            2: {
+                                data: document.getElementById('quotaAnnuale2DataEdit').value,
+                                pagata: document.getElementById('quotaAnnuale2CheckEdit').checked
+                            },
+                            3: {
+                                data: document.getElementById('quotaAnnuale3DataEdit').value,
+                                pagata: document.getElementById('quotaAnnuale3CheckEdit').checked
+                            },
+                            4: {
+                                data: document.getElementById('quotaAnnuale4DataEdit').value,
+                                pagata: document.getElementById('quotaAnnuale4CheckEdit').checked
+                            }
+                        },
+                        moduloIscrizione: {
+                            presente: document.getElementById('moduloIscrizioneCheckEdit').checked
+                        },
+                        moduloSanitario: {
+                            1: {
+                                data: document.getElementById('moduloSanitario1DataEdit').value,
+                                presente: document.getElementById('moduloSanitario1CheckEdit').checked
+                            },
+                            2: {
+                                data: document.getElementById('moduloSanitario2DataEdit').value,
+                                presente: document.getElementById('moduloSanitario2CheckEdit').checked
+                            },
+                            3: {
+                                data: document.getElementById('moduloSanitario3DataEdit').value,
+                                presente: document.getElementById('moduloSanitario3CheckEdit').checked
+                            },
+                            4: {
+                                data: document.getElementById('moduloSanitario4DataEdit').value,
+                                presente: document.getElementById('moduloSanitario4CheckEdit').checked
+                            }
+                        },
+                        moduloPrivacy: {
+                            1: {
+                                data: document.getElementById('moduloPrivacy1DataEdit').value,
+                                presente: document.getElementById('moduloPrivacy1CheckEdit').checked
+                            },
+                            2: {
+                                data: document.getElementById('moduloPrivacy2DataEdit').value,
+                                presente: document.getElementById('moduloPrivacy2CheckEdit').checked
+                            },
+                            3: {
+                                data: document.getElementById('moduloPrivacy3DataEdit').value,
+                                presente: document.getElementById('moduloPrivacy3CheckEdit').checked
+                            },
+                            4: {
+                                data: document.getElementById('moduloPrivacy4DataEdit').value,
+                                presente: document.getElementById('moduloPrivacy4CheckEdit').checked
+                            }
+                        }
+                    }
+                }
+            };
+
+            try {
+                await updateDoc(doc(db, "utenti", userId), userData);
+                currentUserData = { ...currentUserData, ...userData };
+                exitEditMode();
+                populateDisplayFields(currentUserData);
+            } catch (error) {
+                console.error("Errore durante il salvataggio:", error);
+                alert("Si è verificato un errore durante il salvataggio dei dati.");
+            }
+        }
+
+        // Funzione per aggiungere una nuova specialità
+        function aggiungiSpecialita() {
+            const specialitaList = document.getElementById('specialitaList');
+            const specialitaId = Date.now(); // ID univoco per la specialità
+
+            const specialitaDiv = document.createElement('div');
+            specialitaDiv.className = 'flex items-center space-x-4';
+            specialitaDiv.innerHTML = `
+                <input type="text" placeholder="Nome Specialità" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="date" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <button onclick="rimuoviSpecialita(${specialitaId})" class="text-red-600 hover:text-red-800">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            `;
+            specialitaDiv.id = `specialita-${specialitaId}`;
+            specialitaList.appendChild(specialitaDiv);
+        }
+
+        function rimuoviSpecialita(id) {
+            const specialita = document.getElementById(`specialita-${id}`);
+            if (specialita) {
+                specialita.remove();
+            }
+        }
+
+        // Event listeners
+        editBtn.addEventListener('click', enterEditMode);
+        saveBtn.addEventListener('click', () => saveData(currentUserData.uid));
+        cancelBtn.addEventListener('click', exitEditMode);
+        aggiungiSpecialitaBtn.addEventListener('click', aggiungiSpecialita);
+
+        // Verifica autenticazione e carica dati
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id') || user.uid;
+
+            try {
+                const userDoc = await getDoc(doc(db, "utenti", userId));
+                if (!userDoc.exists()) {
+                    throw new Error('Utente non trovato');
+                }
+
+                const userData = userDoc.data();
+                currentUserData = { ...userData, uid: userId };
+
+                // Verifica se l'utente corrente è staff
+                const currentUserDoc = await getDoc(doc(db, "utenti", user.uid));
+                const loggedInUserData = currentUserDoc.data();
+                isStaff = loggedInUserData.staff && loggedInUserData.approvato;
+
+                // Mostra i controlli staff solo se l'utente è staff
+                if (isStaff) {
+                    staffControls.classList.remove('hidden');
+                }
+
+                // Popola i dati della scheda
+                document.getElementById('nomeCompleto').textContent = `${userData.nome} ${userData.cognome}`;
+                document.getElementById('emailLink').textContent = userData.email;
+                document.getElementById('emailLink').href = `mailto:${userData.email}`;
+
+                // Popola i campi di visualizzazione
+                populateDisplayFields(userData);
+
+                // Popola i campi di modifica
+                populateEditFields(userData);
+
+                // Nascondi il loading e mostra il contenuto
+                loading.classList.add('hidden');
+                schedaContent.classList.remove('hidden');
+            } catch (error) {
+                console.error("Errore durante il caricamento:", error);
+                alert("Si è verificato un errore durante il caricamento dei dati.");
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error("Errore durante il logout:", error);
+            }
+        });
+
+        // Aggiungi questa funzione per gestire la navigazione tra le sezioni
+        window.mostraSezione = function(sezione) {
+            // Nascondi tutte le sezioni
+            document.querySelectorAll('.sezione').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Mostra la sezione selezionata
+            document.getElementById(`sezione-${sezione}`).classList.remove('hidden');
+            
+            // Aggiorna lo stile dei pulsanti del menu
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('text-white', 'bg-primary');
+                btn.classList.add('text-gray-600');
+            });
+            
+            // Evidenzia il pulsante selezionato
+            const selectedBtn = document.querySelector(`nav button[onclick="mostraSezione('${sezione}')"]`);
+            selectedBtn.classList.remove('text-gray-600');
+            selectedBtn.classList.add('text-white', 'bg-primary');
+        };
+
+        // Mostra la sezione anagrafici all'avvio
+        document.addEventListener('DOMContentLoaded', () => {
+            mostraSezione('anagrafici');
+        });
+    </script>
+    <script>
+        // Gestione delle sfide e date
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            const maxSelections = 3;
+            let selectedCount = 0;
+
+            // Funzione per aggiornare il contatore delle selezioni
+            function updateSelectionCount() {
+                selectedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+                const remaining = maxSelections - selectedCount;
+                
+                // Aggiorna lo stato dei checkbox non selezionati
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.checked) {
+                        checkbox.disabled = selectedCount >= maxSelections;
+                    }
+                });
+            }
+
+            // Gestione dei checkbox
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const dateInput = document.getElementById(this.id + '-data');
+                    
+                    if (this.checked) {
+                        dateInput.disabled = false;
+                        dateInput.required = true;
+                    } else {
+                        dateInput.disabled = true;
+                        dateInput.required = false;
+                        dateInput.value = '';
+                    }
+                    
+                    updateSelectionCount();
+                });
+            });
+
+            // Inizializza lo stato dei checkbox
+            updateSelectionCount();
+        });
+    </script>
+</body>
+</html> 

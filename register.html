@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparto Maori TO4-Bra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="/cursorscout/js/firebaseConfig.js"></script>
+    <script type="module" src="/cursorscout/js/auth.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .card {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .btn-primary {
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full space-y-8 p-8 card rounded-2xl shadow-2xl">
+        <div class="text-center">
+            <div class="flex justify-center">
+                <svg class="w-20 h-20 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+            </div>
+            <h2 class="mt-6 text-3xl font-bold text-gray-900">
+                Registrati a CursorScout
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Crea il tuo account per accedere al reparto scout
+            </p>
+        </div>
+        <form id="registerForm" class="mt-8 space-y-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome</label>
+                    <input id="nome" name="nome" type="text" required 
+                           class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                           placeholder="Il tuo nome">
+                </div>
+                <div>
+                    <label for="cognome" class="block text-sm font-medium text-gray-700">Cognome</label>
+                    <input id="cognome" name="cognome" type="text" required 
+                           class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                           placeholder="Il tuo cognome">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required 
+                           class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                           placeholder="nome@esempio.com">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required 
+                           class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                           placeholder="••••••••">
+                </div>
+                <div>
+                    <label for="ruolo" class="block text-sm font-medium text-gray-700">Ruolo</label>
+                    <select id="ruolo" name="ruolo" required 
+                            class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">Seleziona il tuo ruolo</option>
+                        <option value="esploratore">Esploratore</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+
+                <!-- Campi aggiuntivi per esploratori -->
+                <div id="campiEsploratore" class="hidden space-y-6">
+                    <!-- 1. Dati Anagrafici -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-900">Dati Anagrafici</h3>
+                        <div>
+                            <label for="dataNascita" class="block text-sm font-medium text-gray-700">Data di Nascita</label>
+                            <input type="date" id="dataNascita" name="dataNascita" required
+                                   class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="codiceFiscale" class="block text-sm font-medium text-gray-700">Codice Fiscale</label>
+                            <input type="text" id="codiceFiscale" name="codiceFiscale" required
+                                   class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="indirizzo" class="block text-sm font-medium text-gray-700">Indirizzo</label>
+                            <input type="text" id="indirizzo" name="indirizzo" required
+                                   class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="telefonoEsploratore" class="block text-sm font-medium text-gray-700">Telefono Esploratore</label>
+                            <input type="tel" id="telefonoEsploratore" name="telefonoEsploratore"
+                                   class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                    </div>
+
+                    <!-- 2. Contatti -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-900">Contatti</h3>
+                        <div class="space-y-4">
+                            <h4 class="text-md font-medium text-gray-800">Genitore 1</h4>
+                            <div>
+                                <label for="genitore1Nome" class="block text-sm font-medium text-gray-700">Nome</label>
+                                <input type="text" id="genitore1Nome" name="genitore1Nome" required
+                                       class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="genitore1Email" class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" id="genitore1Email" name="genitore1Email" required
+                                       class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="genitore1Numero" class="block text-sm font-medium text-gray-700">Numero</label>
+                                <input type="tel" id="genitore1Numero" name="genitore1Numero" required
+                                       class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h4 class="text-md font-medium text-gray-800">Genitore 2</h4>
+                            <div>
+                                <label for="genitore2Nome" class="block text-sm font-medium text-gray-700">Nome</label>
+                                <input type="text" id="genitore2Nome" name="genitore2Nome"
+                                       class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="genitore2Email" class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" id="genitore2Email" name="genitore2Email"
+                                       class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="genitore2Numero" class="block text-sm font-medium text-gray-700">Numero</label>
+                                <input type="tel" id="genitore2Numero" name="genitore2Numero"
+                                       class="input-field appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" 
+                        class="btn-primary group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <svg class="h-5 w-5 text-blue-500 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </span>
+                    Registrati
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center">
+            <a href="login.html" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                Hai già un account? Accedi
+            </a>
+        </div>
+
+        <div id="errorMessage" class="hidden mt-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg"></div>
+    </div>
+
+    <script type="module">
+        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { auth } from '/cursorscout/js/firebaseConfig.js';
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { db } from '/cursorscout/js/firebaseConfig.js';
+
+        const registerForm = document.getElementById('registerForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Gestione visualizzazione campi esploratore
+        const ruoloSelect = document.getElementById('ruolo');
+        const campiEsploratore = document.getElementById('campiEsploratore');
+
+        ruoloSelect.addEventListener('change', () => {
+            if (ruoloSelect.value === 'esploratore') {
+                campiEsploratore.classList.remove('hidden');
+            } else {
+                campiEsploratore.classList.add('hidden');
+            }
+        });
+
+        // Modifica la gestione del form per includere solo i dati anagrafici e di contatto
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const cognome = document.getElementById('cognome').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const ruolo = document.getElementById('ruolo').value;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Prepara i dati dell'utente
+                const userData = {
+                    nome,
+                    cognome,
+                    email,
+                    ruolo,
+                    staff: ruolo === 'staff',
+                    approvato: ruolo === 'esploratore',
+                    createdAt: new Date()
+                };
+
+                // Se è un esploratore, aggiungi i dati anagrafici e di contatto
+                if (ruolo === 'esploratore') {
+                    userData.datiScheda = {
+                        anagrafici: {
+                            dataNascita: document.getElementById('dataNascita').value,
+                            codiceFiscale: document.getElementById('codiceFiscale').value,
+                            indirizzo: document.getElementById('indirizzo').value,
+                            telefono: document.getElementById('telefonoEsploratore').value
+                        },
+                        contatti: {
+                            genitore1: {
+                                nome: document.getElementById('genitore1Nome').value,
+                                email: document.getElementById('genitore1Email').value,
+                                numero: document.getElementById('genitore1Numero').value
+                            },
+                            genitore2: {
+                                nome: document.getElementById('genitore2Nome').value,
+                                email: document.getElementById('genitore2Email').value,
+                                numero: document.getElementById('genitore2Numero').value
+                            }
+                        },
+                        // Struttura vuota per i dati che verranno compilati dallo staff
+                        sanitarie: {},
+                        progressione: {},
+                        specialita: [],
+                        eventi: {},
+                        presenze: {},
+                        documenti: {}
+                    };
+                }
+
+                // Crea il documento utente in Firestore
+                await setDoc(doc(db, "utenti", user.uid), userData);
+
+                if (ruolo === 'staff') {
+                    // Mostra messaggio di attesa approvazione
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'mt-4 p-4 text-sm text-blue-700 bg-blue-100 rounded-lg';
+                    successMessage.innerHTML = `
+                        <p class="font-medium">Registrazione completata!</p>
+                        <p class="mt-2">Il tuo account staff è in attesa di approvazione. Riceverai una notifica quando sarà approvato.</p>
+                    `;
+                    registerForm.parentNode.insertBefore(successMessage, registerForm.nextSibling);
+                    
+                    // Reindirizza al login dopo 5 secondi
+                    setTimeout(() => {
+                        window.location.href = '/cursorscout/login.html';
+                    }, 5000);
+                } else {
+                    // Per gli esploratori, reindirizza direttamente alla dashboard
+                    window.location.href = '/cursorscout/dashboard.html';
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html> 

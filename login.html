@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparto Maori TO4-Bra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-bold text-primary">
+                Reparto Maori TO4-Bra
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Accedi al tuo account
+            </p>
+        </div>
+        <form class="mt-8 space-y-6" id="loginForm">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email" class="sr-only">Email</label>
+                    <input id="email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Email">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Password">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="btn-primary group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md">
+                    Accedi
+                </button>
+            </div>
+
+            <div class="text-sm text-center">
+                <a href="registrazione.html" class="font-medium text-primary hover:text-primary-light">
+                    Non hai un account? Registrati
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script type="module" src="js/firebaseConfig.js"></script>
+    <script type="module" src="js/login.js"></script>
+</body>
+</html> 
