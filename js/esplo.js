@@ -53,6 +53,7 @@ async function loadEsploratoreData(esploratoreId) {
 
         const esploratore = esploratoreDoc.data();
         console.log('Dati esploratore recuperati:', esploratore);
+        console.log('Struttura completa dei dati:', JSON.stringify(esploratore, null, 2));
         
         // Aggiorna l'header con i dati dell'esploratore
         document.getElementById('nomeCompleto').textContent = `${esploratore.nome} ${esploratore.cognome}`;
@@ -87,6 +88,7 @@ async function loadEsploratoreData(esploratoreId) {
 // Funzione per caricare i dati di una sezione
 async function loadSezioneData(sezione, esploratore) {
     console.log('Caricamento sezione:', sezione, 'con dati:', esploratore);
+    console.log('Campi disponibili:', Object.keys(esploratore));
     const container = document.getElementById('sezioneContent');
     try {
         const response = await fetch(`sezioni/${sezione}.html`);
@@ -98,9 +100,16 @@ async function loadSezioneData(sezione, esploratore) {
         switch (sezione) {
             case 'anagrafici':
                 console.log('Popolamento sezione anagrafici');
+                console.log('Dati anagrafici:', {
+                    data_nascita: esploratore.data_nascita,
+                    codice_fiscale: esploratore.codice_fiscale,
+                    indirizzo_residenza: esploratore.indirizzo_residenza,
+                    numero_telefono: esploratore.numero_telefono
+                });
+                
                 // Formatta la data di nascita se presente
                 const dataNascita = esploratore.data_nascita ? new Date(esploratore.data_nascita).toLocaleDateString('it-IT') : '-';
-                console.log('Data nascita:', dataNascita);
+                console.log('Data nascita formattata:', dataNascita);
                 document.getElementById('dataNascitaDisplay').textContent = dataNascita;
                 if (document.getElementById('dataNascitaEdit')) {
                     document.getElementById('dataNascitaEdit').value = esploratore.data_nascita || '';
