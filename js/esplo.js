@@ -90,115 +90,128 @@ async function loadEsploratoreData(esploratoreId) {
 
 // Funzione per caricare i dati di una sezione
 async function loadSezioneData(sezione, esploratore) {
-    console.log('Caricamento sezione:', sezione, 'con dati:', esploratore);
-    console.log('Campi disponibili:', Object.keys(esploratore));
-    const container = document.getElementById('sezioneContent');
-    try {
-        const response = await fetch(`sezioni/${sezione}.html`);
-        if (!response.ok) throw new Error('Sezione non trovata');
-        const content = await response.text();
-        container.innerHTML = content;
+    console.log('Popolamento dati per sezione:', sezione);
+    console.log('Dati disponibili:', esploratore);
+    
+    // Popola i campi con i dati dell'esploratore
+    switch (sezione) {
+        case 'anagrafici':
+            console.log('Popolamento sezione anagrafici');
+            const datiAnagrafici = esploratore.datiScheda?.anagrafici || {};
+            console.log('Dati anagrafici completi:', datiAnagrafici);
+            
+            // Formatta la data di nascita se presente
+            const dataNascita = datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
+            console.log('Data nascita formattata:', dataNascita);
+            
+            // Verifica che gli elementi esistano prima di modificarli
+            const dataNascitaDisplay = document.getElementById('dataNascitaDisplay');
+            const dataNascitaEdit = document.getElementById('dataNascitaEdit');
+            if (dataNascitaDisplay) {
+                dataNascitaDisplay.textContent = dataNascita;
+                console.log('Data nascita display aggiornato:', dataNascita);
+            }
+            if (dataNascitaEdit) {
+                dataNascitaEdit.value = datiAnagrafici.dataNascita || '';
+                console.log('Data nascita edit aggiornato:', datiAnagrafici.dataNascita);
+            }
 
-        // Popola i campi con i dati dell'esploratore
-        switch (sezione) {
-            case 'anagrafici':
-                console.log('Popolamento sezione anagrafici');
-                const datiAnagrafici = esploratore.datiScheda?.anagrafici || {};
-                console.log('Dati anagrafici:', datiAnagrafici);
-                
-                // Formatta la data di nascita se presente
-                const dataNascita = datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
-                console.log('Data nascita formattata:', dataNascita);
-                document.getElementById('dataNascitaDisplay').textContent = dataNascita;
-                if (document.getElementById('dataNascitaEdit')) {
-                    document.getElementById('dataNascitaEdit').value = datiAnagrafici.dataNascita || '';
+            const codiceFiscaleDisplay = document.getElementById('codiceFiscaleDisplay');
+            const codiceFiscaleEdit = document.getElementById('codiceFiscaleEdit');
+            if (codiceFiscaleDisplay) {
+                codiceFiscaleDisplay.textContent = datiAnagrafici.codiceFiscale || '-';
+                console.log('Codice fiscale display aggiornato:', datiAnagrafici.codiceFiscale);
+            }
+            if (codiceFiscaleEdit) {
+                codiceFiscaleEdit.value = datiAnagrafici.codiceFiscale || '';
+                console.log('Codice fiscale edit aggiornato:', datiAnagrafici.codiceFiscale);
+            }
+
+            const indirizzoDisplay = document.getElementById('indirizzoDisplay');
+            const indirizzoEdit = document.getElementById('indirizzoEdit');
+            if (indirizzoDisplay) {
+                indirizzoDisplay.textContent = datiAnagrafici.indirizzo || '-';
+                console.log('Indirizzo display aggiornato:', datiAnagrafici.indirizzo);
+            }
+            if (indirizzoEdit) {
+                indirizzoEdit.value = datiAnagrafici.indirizzo || '';
+                console.log('Indirizzo edit aggiornato:', datiAnagrafici.indirizzo);
+            }
+
+            const telefonoDisplay = document.getElementById('telefonoDisplay');
+            const telefonoEdit = document.getElementById('telefonoEdit');
+            if (telefonoDisplay) {
+                telefonoDisplay.textContent = datiAnagrafici.telefono || '-';
+                console.log('Telefono display aggiornato:', datiAnagrafici.telefono);
+            }
+            if (telefonoEdit) {
+                telefonoEdit.value = datiAnagrafici.telefono || '';
+                console.log('Telefono edit aggiornato:', datiAnagrafici.telefono);
+            }
+            break;
+
+        case 'contatti':
+            // Popola i dati dei genitori
+            const datiContatti = esploratore.datiScheda?.contatti || {};
+            if (datiContatti.genitore1) {
+                const gen1 = datiContatti.genitore1;
+                document.getElementById('genitore1Display').innerHTML = `
+                    <div>${gen1.nome || '-'}</div>
+                    <div>${gen1.email || '-'}</div>
+                    <div>${gen1.numero || '-'}</div>
+                `;
+                if (document.getElementById('genitore1NomeEdit')) {
+                    document.getElementById('genitore1NomeEdit').value = gen1.nome || '';
+                    document.getElementById('genitore1EmailEdit').value = gen1.email || '';
+                    document.getElementById('genitore1NumeroEdit').value = gen1.numero || '';
                 }
+            }
 
-                console.log('Codice fiscale:', datiAnagrafici.codiceFiscale);
-                document.getElementById('codiceFiscaleDisplay').textContent = datiAnagrafici.codiceFiscale || '-';
-                if (document.getElementById('codiceFiscaleEdit')) {
-                    document.getElementById('codiceFiscaleEdit').value = datiAnagrafici.codiceFiscale || '';
+            if (datiContatti.genitore2) {
+                const gen2 = datiContatti.genitore2;
+                document.getElementById('genitore2Display').innerHTML = `
+                    <div>${gen2.nome || '-'}</div>
+                    <div>${gen2.email || '-'}</div>
+                    <div>${gen2.numero || '-'}</div>
+                `;
+                if (document.getElementById('genitore2NomeEdit')) {
+                    document.getElementById('genitore2NomeEdit').value = gen2.nome || '';
+                    document.getElementById('genitore2EmailEdit').value = gen2.email || '';
+                    document.getElementById('genitore2NumeroEdit').value = gen2.numero || '';
                 }
+            }
+            break;
 
-                console.log('Indirizzo:', datiAnagrafici.indirizzo);
-                document.getElementById('indirizzoDisplay').textContent = datiAnagrafici.indirizzo || '-';
-                if (document.getElementById('indirizzoEdit')) {
-                    document.getElementById('indirizzoEdit').value = datiAnagrafici.indirizzo || '';
-                }
+        case 'sanitarie':
+            const datiSanitari = esploratore.datiScheda?.sanitarie || {};
+            document.getElementById('gruppoSanguignoDisplay').textContent = datiSanitari.gruppoSanguigno || '-';
+            if (document.getElementById('gruppoSanguignoEdit')) {
+                document.getElementById('gruppoSanguignoEdit').value = datiSanitari.gruppoSanguigno || '';
+            }
 
-                console.log('Telefono:', datiAnagrafici.telefono);
-                document.getElementById('telefonoDisplay').textContent = datiAnagrafici.telefono || '-';
-                if (document.getElementById('telefonoEdit')) {
-                    document.getElementById('telefonoEdit').value = datiAnagrafici.telefono || '';
-                }
-                break;
+            document.getElementById('intolleranzeDisplay').textContent = datiSanitari.intolleranze || '-';
+            if (document.getElementById('intolleranzeEdit')) {
+                document.getElementById('intolleranzeEdit').value = datiSanitari.intolleranze || '';
+            }
 
-            case 'contatti':
-                // Popola i dati dei genitori
-                const datiContatti = esploratore.datiScheda?.contatti || {};
-                if (datiContatti.genitore1) {
-                    const gen1 = datiContatti.genitore1;
-                    document.getElementById('genitore1Display').innerHTML = `
-                        <div>${gen1.nome || '-'}</div>
-                        <div>${gen1.email || '-'}</div>
-                        <div>${gen1.numero || '-'}</div>
-                    `;
-                    if (document.getElementById('genitore1NomeEdit')) {
-                        document.getElementById('genitore1NomeEdit').value = gen1.nome || '';
-                        document.getElementById('genitore1EmailEdit').value = gen1.email || '';
-                        document.getElementById('genitore1NumeroEdit').value = gen1.numero || '';
-                    }
-                }
+            document.getElementById('allergieDisplay').textContent = datiSanitari.allergie || '-';
+            if (document.getElementById('allergieEdit')) {
+                document.getElementById('allergieEdit').value = datiSanitari.allergie || '';
+            }
 
-                if (datiContatti.genitore2) {
-                    const gen2 = datiContatti.genitore2;
-                    document.getElementById('genitore2Display').innerHTML = `
-                        <div>${gen2.nome || '-'}</div>
-                        <div>${gen2.email || '-'}</div>
-                        <div>${gen2.numero || '-'}</div>
-                    `;
-                    if (document.getElementById('genitore2NomeEdit')) {
-                        document.getElementById('genitore2NomeEdit').value = gen2.nome || '';
-                        document.getElementById('genitore2EmailEdit').value = gen2.email || '';
-                        document.getElementById('genitore2NumeroEdit').value = gen2.numero || '';
-                    }
-                }
-                break;
+            document.getElementById('farmaciDisplay').textContent = datiSanitari.farmaci || '-';
+            if (document.getElementById('farmaciEdit')) {
+                document.getElementById('farmaciEdit').value = datiSanitari.farmaci || '';
+            }
+            break;
 
-            case 'sanitarie':
-                const datiSanitari = esploratore.datiScheda?.sanitarie || {};
-                document.getElementById('gruppoSanguignoDisplay').textContent = datiSanitari.gruppoSanguigno || '-';
-                if (document.getElementById('gruppoSanguignoEdit')) {
-                    document.getElementById('gruppoSanguignoEdit').value = datiSanitari.gruppoSanguigno || '';
-                }
-
-                document.getElementById('intolleranzeDisplay').textContent = datiSanitari.intolleranze || '-';
-                if (document.getElementById('intolleranzeEdit')) {
-                    document.getElementById('intolleranzeEdit').value = datiSanitari.intolleranze || '';
-                }
-
-                document.getElementById('allergieDisplay').textContent = datiSanitari.allergie || '-';
-                if (document.getElementById('allergieEdit')) {
-                    document.getElementById('allergieEdit').value = datiSanitari.allergie || '';
-                }
-
-                document.getElementById('farmaciDisplay').textContent = datiSanitari.farmaci || '-';
-                if (document.getElementById('farmaciEdit')) {
-                    document.getElementById('farmaciEdit').value = datiSanitari.farmaci || '';
-                }
-                break;
-
-            case 'progressione':
-                const datiProgressione = esploratore.datiScheda?.progressione || {};
-                document.getElementById('promessaDisplay').textContent = datiProgressione.promessa || '-';
-                document.getElementById('brevettoDisplay').textContent = datiProgressione.brevetto || '-';
-                document.getElementById('specialitaDisplay').textContent = datiProgressione.specialita || '-';
-                document.getElementById('cordaDisplay').textContent = datiProgressione.corda || '-';
-                break;
-        }
-    } catch (error) {
-        console.error(`Errore nel caricamento della sezione ${sezione}:`, error);
-        container.innerHTML = '<div class="p-4 text-red-600">Errore nel caricamento della sezione</div>';
+        case 'progressione':
+            const datiProgressione = esploratore.datiScheda?.progressione || {};
+            document.getElementById('promessaDisplay').textContent = datiProgressione.promessa || '-';
+            document.getElementById('brevettoDisplay').textContent = datiProgressione.brevetto || '-';
+            document.getElementById('specialitaDisplay').textContent = datiProgressione.specialita || '-';
+            document.getElementById('cordaDisplay').textContent = datiProgressione.corda || '-';
+            break;
     }
 }
 
@@ -234,6 +247,25 @@ window.caricaSezione = async function(sezione) {
             console.log('Dati ricaricati:', esploratoreData);
         }
         
+        // Verifica che i dati siano presenti prima di procedere
+        if (!esploratoreData || !esploratoreData.datiScheda) {
+            console.error('Dati mancanti o incompleti:', esploratoreData);
+            throw new Error('Dati esploratore incompleti');
+        }
+
+        // Carica l'HTML della sezione
+        const response = await fetch(`sezioni/${sezione}.html`);
+        if (!response.ok) throw new Error('Sezione non trovata');
+        const content = await response.text();
+        
+        // Aggiorna il contenuto
+        const container = document.getElementById('sezioneContent');
+        container.innerHTML = content;
+        
+        // Aspetta che il DOM sia aggiornato
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Popola i campi
         await loadSezioneData(sezione, esploratoreData);
         hideLoader();
     } catch (error) {
