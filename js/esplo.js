@@ -94,27 +94,92 @@ async function loadSezioneData(sezione, esploratore) {
         // Popola i campi con i dati dell'esploratore
         switch (sezione) {
             case 'anagrafici':
-                document.getElementById('dataNascitaDisplay').textContent = esploratore.dataNascita || '-';
+                // Formatta la data di nascita se presente
+                const dataNascita = esploratore.dataNascita ? new Date(esploratore.dataNascita).toLocaleDateString('it-IT') : '-';
+                document.getElementById('dataNascitaDisplay').textContent = dataNascita;
+                if (document.getElementById('dataNascitaEdit')) {
+                    document.getElementById('dataNascitaEdit').value = esploratore.dataNascita || '';
+                }
+
                 document.getElementById('codiceFiscaleDisplay').textContent = esploratore.codiceFiscale || '-';
+                if (document.getElementById('codiceFiscaleEdit')) {
+                    document.getElementById('codiceFiscaleEdit').value = esploratore.codiceFiscale || '';
+                }
+
                 document.getElementById('indirizzoDisplay').textContent = esploratore.indirizzo || '-';
+                if (document.getElementById('indirizzoEdit')) {
+                    document.getElementById('indirizzoEdit').value = esploratore.indirizzo || '';
+                }
+
                 document.getElementById('telefonoDisplay').textContent = esploratore.telefono || '-';
+                if (document.getElementById('telefonoEdit')) {
+                    document.getElementById('telefonoEdit').value = esploratore.telefono || '';
+                }
                 break;
+
             case 'contatti':
                 // Popola i dati dei genitori
+                if (esploratore.genitori) {
+                    // Genitore 1
+                    if (esploratore.genitori.genitore1) {
+                        const gen1 = esploratore.genitori.genitore1;
+                        document.getElementById('genitore1Display').innerHTML = `
+                            <div>${gen1.nome || '-'}</div>
+                            <div>${gen1.email || '-'}</div>
+                            <div>${gen1.numero || '-'}</div>
+                        `;
+                        if (document.getElementById('genitore1NomeEdit')) {
+                            document.getElementById('genitore1NomeEdit').value = gen1.nome || '';
+                            document.getElementById('genitore1EmailEdit').value = gen1.email || '';
+                            document.getElementById('genitore1NumeroEdit').value = gen1.numero || '';
+                        }
+                    }
+
+                    // Genitore 2
+                    if (esploratore.genitori.genitore2) {
+                        const gen2 = esploratore.genitori.genitore2;
+                        document.getElementById('genitore2Display').innerHTML = `
+                            <div>${gen2.nome || '-'}</div>
+                            <div>${gen2.email || '-'}</div>
+                            <div>${gen2.numero || '-'}</div>
+                        `;
+                        if (document.getElementById('genitore2NomeEdit')) {
+                            document.getElementById('genitore2NomeEdit').value = gen2.nome || '';
+                            document.getElementById('genitore2EmailEdit').value = gen2.email || '';
+                            document.getElementById('genitore2NumeroEdit').value = gen2.numero || '';
+                        }
+                    }
+                }
                 break;
+
             case 'sanitarie':
                 document.getElementById('gruppoSanguignoDisplay').textContent = esploratore.gruppoSanguigno || '-';
+                if (document.getElementById('gruppoSanguignoEdit')) {
+                    document.getElementById('gruppoSanguignoEdit').value = esploratore.gruppoSanguigno || '';
+                }
+
                 document.getElementById('intolleranzeDisplay').textContent = esploratore.intolleranze || '-';
+                if (document.getElementById('intolleranzeEdit')) {
+                    document.getElementById('intolleranzeEdit').value = esploratore.intolleranze || '';
+                }
+
                 document.getElementById('allergieDisplay').textContent = esploratore.allergie || '-';
+                if (document.getElementById('allergieEdit')) {
+                    document.getElementById('allergieEdit').value = esploratore.allergie || '';
+                }
+
                 document.getElementById('farmaciDisplay').textContent = esploratore.farmaci || '-';
+                if (document.getElementById('farmaciEdit')) {
+                    document.getElementById('farmaciEdit').value = esploratore.farmaci || '';
+                }
                 break;
+
             case 'progressione':
                 document.getElementById('promessaDisplay').textContent = esploratore.promessa || '-';
                 document.getElementById('brevettoDisplay').textContent = esploratore.brevetto || '-';
                 document.getElementById('specialitaDisplay').textContent = esploratore.specialita || '-';
                 document.getElementById('cordaDisplay').textContent = esploratore.corda || '-';
                 break;
-            // Aggiungi altri casi per le altre sezioni
         }
     } catch (error) {
         console.error(`Errore nel caricamento della sezione ${sezione}:`, error);
