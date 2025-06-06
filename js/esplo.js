@@ -338,13 +338,15 @@ window.caricaSezione = async function(sezione) {
         showLoader();
         console.log('Caricamento sezione:', sezione);
         
-        // Forza il ricaricamento dei dati da Firebase
-        const urlParams = new URLSearchParams(window.location.search);
-        const esploratoreId = urlParams.get('id');
-        const esploratoreRef = doc(db, "utenti", esploratoreId);
-        const esploratoreDoc = await getDoc(esploratoreRef);
-        esploratoreData = esploratoreDoc.data();
-        console.log('Dati ricaricati da Firebase:', esploratoreData);
+        // Se i dati non sono presenti, caricali da Firebase
+        if (!esploratoreData) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const esploratoreId = urlParams.get('id');
+            const esploratoreRef = doc(db, "utenti", esploratoreId);
+            const esploratoreDoc = await getDoc(esploratoreRef);
+            esploratoreData = esploratoreDoc.data();
+            console.log('Dati caricati da Firebase:', esploratoreData);
+        }
         
         // Verifica che i dati siano presenti prima di procedere
         if (!esploratoreData || !esploratoreData.datiScheda) {
@@ -352,19 +354,19 @@ window.caricaSezione = async function(sezione) {
             throw new Error('Dati esploratore incompleti');
         }
 
-        // Resetta il contenuto della sezione precedente
-        sezioniContent[sezione] = null;
-        
-        // Carica il contenuto della sezione
-        const content = await loadSezioneContent(sezione);
+        // Carica il contenuto della sezione se non è già presente
+        if (!sezioniContent[sezione]) {
+            const content = await loadSezioneContent(sezione);
+            sezioniContent[sezione] = content;
+        }
         
         // Aggiorna il contenuto
         const container = document.getElementById('sezioneContent');
         container.innerHTML = '';
         if (sezione === 'anagrafici') {
-            container.appendChild(content);
+            container.appendChild(sezioniContent[sezione]);
         } else {
-            container.innerHTML = content;
+            container.innerHTML = sezioniContent[sezione];
         }
         
         // Aspetta che il DOM sia aggiornato
