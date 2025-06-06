@@ -1714,8 +1714,16 @@ function formatFieldValue(fieldId, value) {
     switch (fieldId) {
         case 'dataNascita':
             return new Date(value).toLocaleDateString('it-IT');
+            
         case 'telefono':
             return value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+            
+        case 'codiceFiscale':
+            return value.toUpperCase();
+            
+        case 'gruppoSanguigno':
+            return value.toUpperCase();
+            
         default:
             return value;
     }
@@ -2042,28 +2050,6 @@ function updateInterfaceAfterEdit(fieldId, newValue) {
                 emailLink.href = `mailto:${newValue}`;
             }
             break;
-    }
-}
-
-// Funzione per formattare il valore di un campo
-function formatFieldValue(fieldId, value) {
-    if (!value) return '-';
-    
-    switch (fieldId) {
-        case 'dataNascita':
-            return new Date(value).toLocaleDateString('it-IT');
-            
-        case 'telefono':
-            return value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
-            
-        case 'codiceFiscale':
-            return value.toUpperCase();
-            
-        case 'gruppoSanguigno':
-            return value.toUpperCase();
-            
-        default:
-            return value;
     }
 }
 
