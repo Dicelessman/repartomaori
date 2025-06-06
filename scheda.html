@@ -757,7 +757,7 @@
     <script type="module">
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { auth } from './js/firebaseConfig.js';
-        import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { doc, getDoc, updateDoc, setDoc, deleteDoc, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { db } from './js/firebaseConfig.js';
 
         const loading = document.getElementById('loading');
@@ -1562,6 +1562,116 @@
             setTimeout(() => {
                 notification.remove();
             }, 5000);
+        }
+
+        // Funzioni per la gestione dei backup
+        async function createBackup(userId) {
+            try {
+                console.log('Creazione backup per utente:', userId);
+                const timestamp = Date.now();
+                const backupData = {
+                    userId,
+                    data: currentUserData,
+                    timestamp,
+                    type: 'manual'
+                };
+
+                // Salva il backup in Firebase
+                await setDoc(doc(db, "backups", `${userId}_${timestamp}`), backupData);
+                
+                // Aggiorna il contatore dei backup
+                const backupCount = await getBackupCount(userId);
+                if (backupCount > 10) {
+                    await cleanupOldBackups(userId);
+                }
+
+                console.log('Backup creato con successo');
+                return true;
+            } catch (error) {
+                console.error('Errore durante la creazione del backup:', error);
+                return false;
+            }
+        }
+
+        async function getBackupCount(userId) {
+            try {
+                const backupsRef = collection(db, "backups");
+                const q = query(backupsRef, where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+                return querySnapshot.size;
+            } catch (error) {
+                console.error('Errore durante il conteggio dei backup:', error);
+                return 0;
+            }
+        }
+
+        async function cleanupOldBackups(userId) {
+            try {
+                const backupsRef = collection(db, "backups");
+                const q = query(
+                    backupsRef,
+                    where("userId", "==", userId),
+                    orderBy("timestamp", "asc")
+                );
+                const querySnapshot = await getDocs(q);
+                
+                // Mantieni solo gli ultimi 10 backup
+                const backups = querySnapshot.docs;
+                const backupsToDelete = backups.slice(0, backups.length - 10);
+                
+                for (const backup of backupsToDelete) {
+                    await deleteDoc(backup.ref);
+                }
+                
+                console.log('Pulizia backup completata');
+                return true;
+            } catch (error) {
+                console.error('Errore durante la pulizia dei backup:', error);
+                return false;
+            }
+        }
+
+        async function restoreFromBackup(timestamp) {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('id');
+                
+                if (!userId) {
+                    throw new Error('ID utente non trovato');
+                }
+
+                const backupRef = doc(db, "backups", `${userId}_${timestamp}`);
+                const backupDoc = await getDoc(backupRef);
+                
+                if (!backupDoc.exists()) {
+                    throw new Error('Backup non trovato');
+                }
+
+                const backupData = backupDoc.data();
+                
+                // Ripristina i dati
+                await updateDoc(doc(db, "utenti", userId), backupData.data);
+                currentUserData = backupData.data;
+                
+                // Aggiorna l'interfaccia
+                populateDisplayFields(currentUserData);
+                
+                showNotification(
+                    'Backup Ripristinato',
+                    'I dati sono stati ripristinati con successo',
+                    NOTIFICATION_TYPES.SUCCESS
+                );
+                
+                return true;
+            } catch (error) {
+                console.error('Errore durante il ripristino del backup:', error);
+                showNotification(
+                    'Errore di Ripristino',
+                    'Si è verificato un errore durante il ripristino dei dati',
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
         }
     </script>
     <script>
