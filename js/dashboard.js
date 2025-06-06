@@ -2,7 +2,7 @@ import { checkAuth, isStaffApproved } from './auth.js';
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { showLoader, hideLoader, showToast } from './ui.js';
-import { createUserWithEmailAndPassword, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
 // Funzione per inizializzare la dashboard
