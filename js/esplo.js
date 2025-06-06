@@ -337,18 +337,14 @@ window.caricaSezione = async function(sezione) {
     try {
         showLoader();
         console.log('Caricamento sezione:', sezione);
-        console.log('Dati esploratore disponibili:', esploratoreData);
         
-        // Se i dati non sono presenti, caricali da Firebase
-        if (!esploratoreData) {
-            console.log('Dati non presenti, ricarico da Firebase');
-            const urlParams = new URLSearchParams(window.location.search);
-            const esploratoreId = urlParams.get('id');
-            const esploratoreRef = doc(db, "utenti", esploratoreId);
-            const esploratoreDoc = await getDoc(esploratoreRef);
-            esploratoreData = esploratoreDoc.data();
-            console.log('Dati ricaricati:', esploratoreData);
-        }
+        // Forza il ricaricamento dei dati da Firebase
+        const urlParams = new URLSearchParams(window.location.search);
+        const esploratoreId = urlParams.get('id');
+        const esploratoreRef = doc(db, "utenti", esploratoreId);
+        const esploratoreDoc = await getDoc(esploratoreRef);
+        esploratoreData = esploratoreDoc.data();
+        console.log('Dati ricaricati da Firebase:', esploratoreData);
         
         // Verifica che i dati siano presenti prima di procedere
         if (!esploratoreData || !esploratoreData.datiScheda) {
