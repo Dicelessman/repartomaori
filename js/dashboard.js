@@ -1,5 +1,5 @@
 import { checkAuth, isStaffApproved } from './auth.js';
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, query, where, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db, auth } from './firebaseConfig.js';
 import { showLoader, hideLoader, showToast } from './ui.js';
 import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
