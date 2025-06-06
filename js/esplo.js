@@ -269,6 +269,7 @@ function getNestedValue(obj, path) {
 // Funzione per inizializzare la scheda
 async function initScheda() {
     try {
+        console.log('Inizializzazione scheda');
         updateState({ isLoading: true });
         showLoader();
         showLoadingIndicator();
@@ -322,6 +323,9 @@ async function initScheda() {
         
         // Carica la prima sezione
         await caricaSezione('anagrafici');
+        
+        // Configura gli eventi di modifica
+        setupEditEvents();
         
         // Aggiungi l'interfaccia dei backup solo dopo che tutto è stato inizializzato
         document.body.appendChild(createBackupInterface());
@@ -697,23 +701,25 @@ async function loadSezioneData(sezione, esploratore) {
 
 // Funzione per salvare i dati
 async function saveData(esploratoreId, data) {
+    console.log('Salvataggio dati per esploratore:', esploratoreId, data);
+    
     try {
         await executeWithRetry(
             async () => {
                 const esploratoreRef = doc(db, "utenti", esploratoreId);
                 await updateDoc(esploratoreRef, data);
+                console.log('Dati salvati in Firebase');
             },
             'salvataggio dati'
         );
-        
-        // Crea un backup dopo il salvataggio
-        await createBackup(esploratoreId);
         
         showNotification(
             'Salvataggio Completato',
             'I dati sono stati salvati con successo',
             NOTIFICATION_TYPES.SYNC
         );
+        
+        return true;
     } catch (error) {
         console.error('Errore durante il salvataggio dei dati:', error);
         showNotification(
@@ -1627,9 +1633,12 @@ function disableEdit(fieldId) {
 
 // Funzione per validare un campo
 async function validateField(fieldId, value) {
+    console.log('Validazione campo:', fieldId, 'con valore:', value);
+    
     const rules = EDIT_CONFIG.validationRules[fieldId];
     if (!rules) return true;
     
+    // Validazione campo obbligatorio
     if (rules.required && !value) {
         showNotification(
             'Campo Obbligatorio',
@@ -1639,6 +1648,7 @@ async function validateField(fieldId, value) {
         return false;
     }
     
+    // Validazione lunghezza minima
     if (rules.minLength && value.length < rules.minLength) {
         showNotification(
             'Lunghezza Minima',
@@ -1648,6 +1658,7 @@ async function validateField(fieldId, value) {
         return false;
     }
     
+    // Validazione pattern
     if (rules.pattern && !rules.pattern.test(value)) {
         showNotification(
             'Formato Non Valido',
@@ -1655,6 +1666,42 @@ async function validateField(fieldId, value) {
             NOTIFICATION_TYPES.ERROR
         );
         return false;
+    }
+    
+    // Validazioni specifiche per campo
+    switch (fieldId) {
+        case 'dataNascita':
+            if (value && isNaN(new Date(value).getTime())) {
+                showNotification(
+                    'Data Non Valida',
+                    'Inserisci una data valida',
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
+            break;
+            
+        case 'telefono':
+            if (value && !/^\+?[\d\s-]{8,}$/.test(value)) {
+                showNotification(
+                    'Numero Non Valido',
+                    'Inserisci un numero di telefono valido',
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
+            break;
+            
+        case 'codiceFiscale':
+            if (value && !/^[A-Z]{6}[\d]{2}[A-Z][\d]{2}[A-Z][\d]{3}[A-Z]$/.test(value.toUpperCase())) {
+                showNotification(
+                    'Codice Fiscale Non Valido',
+                    'Inserisci un codice fiscale valido',
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
+            break;
     }
     
     return true;
@@ -1850,6 +1897,8 @@ const throttledUpdateNavigationStyle = throttle((sezioneCorrente) => {
 
 // Funzione per salvare un campo
 async function saveField(fieldId, value) {
+    console.log('Salvataggio campo:', fieldId, 'con valore:', value);
+    
     const urlParams = new URLSearchParams(window.location.search);
     const esploratoreId = urlParams.get('id');
     
@@ -1859,6 +1908,14 @@ async function saveField(fieldId, value) {
     
     // Determina il percorso del campo nei dati
     let updatePath;
+    let updateValue = value;
+    
+    // Gestione speciale per i campi di tipo data
+    if (fieldId === 'dataNascita' && value) {
+        updateValue = new Date(value).toISOString();
+    }
+    
+    // Determina il percorso corretto per il campo
     switch (fieldId) {
         case 'dataNascita':
         case 'codiceFiscale':
@@ -1866,26 +1923,197 @@ async function saveField(fieldId, value) {
         case 'telefono':
             updatePath = `datiScheda.anagrafici.${fieldId}`;
             break;
+        case 'gruppoSanguigno':
+        case 'intolleranze':
+        case 'allergie':
+        case 'farmaci':
+            updatePath = `datiScheda.sanitarie.${fieldId}`;
+            break;
+        case 'promessa':
+        case 'brevetto':
+        case 'specialita':
+        case 'corda':
+            updatePath = `datiScheda.progressione.${fieldId}`;
+            break;
         default:
             updatePath = `datiScheda.${fieldId}`;
     }
     
+    console.log('Percorso di aggiornamento:', updatePath);
+    
     // Prepara l'oggetto di aggiornamento
     const updateData = {
-        [updatePath]: value,
+        [updatePath]: updateValue,
         lastUpdate: new Date().toISOString()
     };
     
-    console.log('Salvataggio dati:', updateData);
-    
-    // Salva i dati
-    await saveData(esploratoreId, updateData);
-    
-    // Aggiorna lo stato locale
-    const newData = { ...state.esploratoreData };
-    setNestedValue(newData, updatePath, value);
-    updateState({ esploratoreData: newData });
+    try {
+        // Salva i dati in Firebase
+        await saveData(esploratoreId, updateData);
+        
+        // Aggiorna lo stato locale
+        const newData = { ...state.esploratoreData };
+        setNestedValue(newData, updatePath, updateValue);
+        updateState({ esploratoreData: newData });
+        
+        // Aggiorna la cache
+        await saveToCache('esploratori', {
+            id: esploratoreId,
+            data: newData,
+            timestamp: Date.now()
+        });
+        
+        // Crea un backup automatico
+        await createBackup(esploratoreId);
+        
+        console.log('Campo salvato con successo:', fieldId);
+        return true;
+    } catch (error) {
+        console.error('Errore durante il salvataggio del campo:', error);
+        throw error;
+    }
 }
 
 // Inizializza la scheda quando il documento è pronto
-document.addEventListener('DOMContentLoaded', initScheda); 
+document.addEventListener('DOMContentLoaded', initScheda);
+
+// Funzione per gestire gli eventi di modifica
+function setupEditEvents() {
+    console.log('Configurazione eventi di modifica');
+    
+    // Gestione eventi per i campi di input
+    document.querySelectorAll('input[type="text"], input[type="date"], input[type="tel"]').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const fieldId = input.id.replace('Edit', '');
+                const saveBtn = input.parentNode.querySelector('.save-btn');
+                if (saveBtn) {
+                    saveBtn.click();
+                }
+            }
+        });
+        
+        input.addEventListener('blur', () => {
+            const fieldId = input.id.replace('Edit', '');
+            const saveBtn = input.parentNode.querySelector('.save-btn');
+            if (saveBtn) {
+                saveBtn.click();
+            }
+        });
+    });
+    
+    // Gestione eventi per i pulsanti di modifica
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        const fieldId = btn.dataset.field;
+        if (fieldId) {
+            btn.addEventListener('click', () => {
+                console.log('Click su pulsante modifica per il campo:', fieldId);
+                enableEdit(fieldId);
+            });
+        }
+    });
+}
+
+// Funzione per aggiornare l'interfaccia dopo una modifica
+function updateInterfaceAfterEdit(fieldId, newValue) {
+    console.log('Aggiornamento interfaccia dopo modifica:', fieldId, newValue);
+    
+    const displayElement = document.getElementById(`${fieldId}Display`);
+    if (displayElement) {
+        displayElement.textContent = formatFieldValue(fieldId, newValue);
+    }
+    
+    // Aggiorna eventuali elementi correlati
+    switch (fieldId) {
+        case 'nome':
+        case 'cognome':
+            const nomeCompleto = document.getElementById('nomeCompleto');
+            if (nomeCompleto) {
+                const data = state.esploratoreData;
+                nomeCompleto.textContent = `${data.nome} ${data.cognome}`;
+            }
+            break;
+            
+        case 'email':
+            const emailLink = document.getElementById('emailLink');
+            if (emailLink) {
+                emailLink.textContent = newValue;
+                emailLink.href = `mailto:${newValue}`;
+            }
+            break;
+    }
+}
+
+// Funzione per formattare il valore di un campo
+function formatFieldValue(fieldId, value) {
+    if (!value) return '-';
+    
+    switch (fieldId) {
+        case 'dataNascita':
+            return new Date(value).toLocaleDateString('it-IT');
+            
+        case 'telefono':
+            return value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+            
+        case 'codiceFiscale':
+            return value.toUpperCase();
+            
+        case 'gruppoSanguigno':
+            return value.toUpperCase();
+            
+        default:
+            return value;
+    }
+}
+
+// Funzione per aggiornare lo stile del menu di navigazione
+function updateNavigationStyle(sezioneCorrente) {
+    console.log('Aggiornamento stile navigazione per sezione:', sezioneCorrente);
+    
+    const navButtons = document.querySelectorAll('nav button');
+    navButtons.forEach(button => {
+        const sezione = button.getAttribute('data-sezione');
+        if (sezione === sezioneCorrente) {
+            button.classList.add('text-white', 'bg-primary');
+            button.classList.remove('text-gray-600');
+        } else {
+            button.classList.remove('text-white', 'bg-primary');
+            button.classList.add('text-gray-600');
+        }
+    });
+}
+
+// Funzione per gestire i risultati della ricerca
+function handleSearchResults(results) {
+    console.log('Gestione risultati ricerca:', results);
+    
+    const resultsContainer = document.getElementById('searchResults');
+    const resultsList = document.getElementById('resultsList');
+    
+    if (!results.length) {
+        resultsContainer.classList.add('hidden');
+        return;
+    }
+
+    // Usa DocumentFragment per migliori performance
+    const fragment = document.createDocumentFragment();
+    results.forEach(result => {
+        const div = document.createElement('div');
+        div.className = 'p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors';
+        div.onclick = () => navigateToResult(result.path);
+        div.innerHTML = `
+            <div class="font-medium">${result.value}</div>
+            <div class="text-sm text-gray-600">
+                ${Object.entries(result.context)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(' | ')}
+            </div>
+        `;
+        fragment.appendChild(div);
+    });
+
+    resultsList.innerHTML = '';
+    resultsList.appendChild(fragment);
+    resultsContainer.classList.remove('hidden');
+}
