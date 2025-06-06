@@ -20,7 +20,7 @@ function updateState(newState) {
 }
 
 // Sistema di cache avanzato
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const CACHE_NAME = `esploratore-cache-v${CACHE_VERSION}`;
 
 // Sistema di notifiche
@@ -112,23 +112,6 @@ async function executeWithRetry(operation, operationName) {
     }
     
     throw new Error(`Operazione ${operationName} fallita dopo ${RETRY_CONFIG.maxAttempts} tentativi: ${lastError.message}`);
-}
-
-// Funzioni per la gestione della cache
-async function initCache() {
-    try {
-        const db = await openDB();
-        console.log('Cache inizializzata con successo');
-        return db;
-    } catch (error) {
-        console.error('Errore nell\'inizializzazione della cache:', error);
-        throw error;
-    }
-}
-
-// Funzione per ottenere l'icona
-function getNotificationIcon(type) {
-    return ICON_CONFIG[type] || ICON_CONFIG.update;
 }
 
 // Funzione per aprire il database
@@ -1309,22 +1292,7 @@ async function populateProgressione(data) {
 // Funzioni per la gestione dei backup
 async function initBackupSystem() {
     try {
-        // Forza l'aggiornamento del database
-        const db = await new Promise((resolve, reject) => {
-            const request = indexedDB.open(CACHE_NAME, CACHE_VERSION + 1);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => resolve(request.result);
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(BACKUP_CONFIG.backupStore)) {
-                    db.createObjectStore(BACKUP_CONFIG.backupStore, { keyPath: 'timestamp' });
-                }
-                if (!db.objectStoreNames.contains(BACKUP_CONFIG.metadataStore)) {
-                    db.createObjectStore(BACKUP_CONFIG.metadataStore, { keyPath: 'id' });
-                }
-            };
-        });
-        
+        const db = await openDB();
         console.log('Sistema di backup inizializzato');
         return true;
     } catch (error) {
