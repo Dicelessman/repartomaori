@@ -2057,15 +2057,27 @@
 
         // Aggiorna la funzione initScheda per includere il pulsante di ricerca
         function initScheda() {
-            // ... existing code ...
-            
-            // Inizializza il sistema di ricerca
+            // Inizializza i sistemi necessari
+            NOTIFICATION_SYSTEM.init();
+            LOADING_SYSTEM.init();
+            CONFIRM_SYSTEM.init();
             SEARCH_SYSTEM.init();
+            STATS_SYSTEM.init();
             
-            // Aggiungi il pulsante di ricerca
+            // Aggiungi i pulsanti alla barra delle azioni
+            addDataManagementButtons();
             addSearchButton();
+            addStatsButton();
             
-            // ... existing code ...
+            // Carica la prima sezione
+            loadSection('anagrafica').catch(error => {
+                console.error('Errore nel caricamento della sezione:', error);
+                showNotification(
+                    'Errore di Caricamento',
+                    'Si è verificato un errore nel caricamento della sezione',
+                    NOTIFICATION_TYPES.ERROR
+                );
+            });
         }
 
         // Sistema di statistiche e reportistica
@@ -2579,19 +2591,6 @@
             statsButton.onclick = () => STATS_SYSTEM.show();
             
             actionBar.appendChild(statsButton);
-        }
-
-        // Aggiorna la funzione initScheda per includere il pulsante delle statistiche
-        function initScheda() {
-            // ... existing code ...
-            
-            // Inizializza il sistema di statistiche
-            STATS_SYSTEM.init();
-            
-            // Aggiungi il pulsante delle statistiche
-            addStatsButton();
-            
-            // ... existing code ...
         }
     </script>
     <script>
