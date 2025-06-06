@@ -75,6 +75,14 @@ const EDIT_CONFIG = {
     }
 };
 
+// Configurazione per le icone
+const ICON_CONFIG = {
+    update: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxMXY0YTIgMiAwIDAgMS0yIDJINWEyIDIgMCAwIDEtMi0ydi00Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iNyAxMCAxMiAxNSAxNyAxMCI+PC9wb2x5bGluZT48cGF0aCBkPSJNMTIgMTVWNyI+PC9wYXRoPjwvc3ZnPg==',
+    error: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIj48L2NpcmNsZT48bGluZSB4MT0iMTUiIHkxPSI5IiB4Mj0iOSIgeTI9IjE1Ij48L2xpbmU+PGxpbmUgeDE9IjkiIHkxPSI5IiB4Mj0iMTUiIHkyPSIxNSI+PC9saW5lPjwvc3ZnPg==',
+    sync: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMyA0djZoLTYiPjwvcGF0aD48cGF0aCBkPSJNMjAgMTVhOSA5IDAgMSAxLTIuNjgtNi45NCI+PC9wYXRoPjwvc3ZnPg==',
+    cache: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxNnYtMmE0IDQgMCAwIDAtNC00SDVhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PHJlY3QgeD0iMyIgeT0iMTYiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0IiByeD0iMiI+PC9yZWN0Pjwvc3ZnPg=='
+};
+
 // Funzione per calcolare il delay del retry
 function calculateRetryDelay(attempt) {
     const delay = Math.min(
@@ -116,6 +124,11 @@ async function initCache() {
         console.error('Errore nell\'inizializzazione della cache:', error);
         throw error;
     }
+}
+
+// Funzione per ottenere l'icona
+function getNotificationIcon(type) {
+    return ICON_CONFIG[type] || ICON_CONFIG.update;
 }
 
 // Funzione per aprire il database
@@ -216,21 +229,6 @@ function createNotification(title, message, type) {
         window.focus();
         this.close();
     };
-}
-
-function getNotificationIcon(type) {
-    switch (type) {
-        case NOTIFICATION_TYPES.UPDATE:
-            return '/assets/icons/update.png';
-        case NOTIFICATION_TYPES.ERROR:
-            return '/assets/icons/error.png';
-        case NOTIFICATION_TYPES.SYNC:
-            return '/assets/icons/sync.png';
-        case NOTIFICATION_TYPES.CACHE:
-            return '/assets/icons/cache.png';
-        default:
-            return '/assets/icons/info.png';
-    }
 }
 
 // Funzione di throttling
@@ -442,14 +440,11 @@ async function initScheda() {
         showLoader();
         showLoadingIndicator();
         
-        // Inizializza prima il database
-        await openDB();
+        // Inizializza prima il database con la nuova versione
+        await initBackupSystem();
         
-        // Poi inizializza la cache e il sistema di backup
-        await Promise.all([
-            initCache(),
-            initBackupSystem()
-        ]);
+        // Poi inizializza la cache
+        await initCache();
         
         // Verifica autenticazione
         const user = await checkAuth();
@@ -1314,7 +1309,22 @@ async function populateProgressione(data) {
 // Funzioni per la gestione dei backup
 async function initBackupSystem() {
     try {
-        const db = await openDB();
+        // Forza l'aggiornamento del database
+        const db = await new Promise((resolve, reject) => {
+            const request = indexedDB.open(CACHE_NAME, CACHE_VERSION + 1);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(BACKUP_CONFIG.backupStore)) {
+                    db.createObjectStore(BACKUP_CONFIG.backupStore, { keyPath: 'timestamp' });
+                }
+                if (!db.objectStoreNames.contains(BACKUP_CONFIG.metadataStore)) {
+                    db.createObjectStore(BACKUP_CONFIG.metadataStore, { keyPath: 'id' });
+                }
+            };
+        });
+        
         console.log('Sistema di backup inizializzato');
         return true;
     } catch (error) {
@@ -1761,6 +1771,4 @@ function setNestedValue(obj, path, value) {
 }
 
 // Inizializza la scheda quando il documento è pronto
-document.addEventListener('DOMContentLoaded', initScheda);
-
-// ... rest of the existing code ... 
+document.addEventListener('DOMContentLoaded', initScheda); 
