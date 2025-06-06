@@ -323,14 +323,20 @@ async function loadEsploratoreData(esploratoreId) {
             return;
         }
 
-        esploratoreData = esploratoreDoc.data();
-        console.log('Dati esploratore recuperati:', esploratoreData);
-        console.log('Struttura completa dei dati:', JSON.stringify(esploratoreData, null, 2));
+        const data = esploratoreDoc.data();
+        console.log('Dati esploratore recuperati:', data);
+        console.log('Struttura completa dei dati:', JSON.stringify(data, null, 2));
+        
+        // Aggiorna lo stato con i nuovi dati
+        updateState({
+            esploratoreData: data,
+            lastUpdate: new Date()
+        });
         
         // Aggiorna l'header con i dati dell'esploratore
-        document.getElementById('nomeCompleto').textContent = `${esploratoreData.nome} ${esploratoreData.cognome}`;
-        document.getElementById('emailLink').textContent = esploratoreData.email;
-        document.getElementById('emailLink').href = `mailto:${esploratoreData.email}`;
+        document.getElementById('nomeCompleto').textContent = `${data.nome} ${data.cognome}`;
+        document.getElementById('emailLink').textContent = data.email;
+        document.getElementById('emailLink').href = `mailto:${data.email}`;
 
         // Mostra i controlli staff se l'utente è staff approvato
         const isApproved = await isStaffApproved();
@@ -344,7 +350,7 @@ async function loadEsploratoreData(esploratoreId) {
 
         // Carica la prima sezione (anagrafici) e gestisci gli errori individualmente
         try {
-            await loadSezioneData('anagrafici', esploratoreData);
+            await loadSezioneData('anagrafici', data);
         } catch (error) {
             console.error('Errore nel caricamento della sezione anagrafici:', error);
             showToast('Errore nel caricamento della sezione anagrafici', 'error');
@@ -980,6 +986,11 @@ window.caricaSezione = async function(sezione) {
 
 // Funzione per popolare una sezione
 async function populateSezione(sezione, data) {
+    if (!data) {
+        console.error('Dati mancanti per la sezione:', sezione);
+        return;
+    }
+
     switch (sezione) {
         case 'anagrafici':
             await populateAnagrafici(data);
@@ -994,6 +1005,61 @@ async function populateSezione(sezione, data) {
             await populateProgressione(data);
             break;
     }
+}
+
+// Funzione per popolare la sezione anagrafici
+async function populateAnagrafici(data) {
+    const datiAnagrafici = data.datiScheda?.anagrafici || {};
+    
+    // Aggiorna i campi con i dati
+    document.getElementById('dataNascitaDisplay').textContent = 
+        datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
+    document.getElementById('codiceFiscaleDisplay').textContent = datiAnagrafici.codiceFiscale || '-';
+    document.getElementById('indirizzoDisplay').textContent = datiAnagrafici.indirizzo || '-';
+    document.getElementById('telefonoDisplay').textContent = datiAnagrafici.telefono || '-';
+}
+
+// Funzione per popolare la sezione contatti
+async function populateContatti(data) {
+    const datiContatti = data.datiScheda?.contatti || {};
+    
+    if (datiContatti.genitore1) {
+        const gen1 = datiContatti.genitore1;
+        document.getElementById('genitore1Display').innerHTML = `
+            <div>${gen1.nome || '-'}</div>
+            <div>${gen1.email || '-'}</div>
+            <div>${gen1.numero || '-'}</div>
+        `;
+    }
+
+    if (datiContatti.genitore2) {
+        const gen2 = datiContatti.genitore2;
+        document.getElementById('genitore2Display').innerHTML = `
+            <div>${gen2.nome || '-'}</div>
+            <div>${gen2.email || '-'}</div>
+            <div>${gen2.numero || '-'}</div>
+        `;
+    }
+}
+
+// Funzione per popolare la sezione sanitarie
+async function populateSanitarie(data) {
+    const datiSanitari = data.datiScheda?.sanitarie || {};
+    
+    document.getElementById('gruppoSanguignoDisplay').textContent = datiSanitari.gruppoSanguigno || '-';
+    document.getElementById('intolleranzeDisplay').textContent = datiSanitari.intolleranze || '-';
+    document.getElementById('allergieDisplay').textContent = datiSanitari.allergie || '-';
+    document.getElementById('farmaciDisplay').textContent = datiSanitari.farmaci || '-';
+}
+
+// Funzione per popolare la sezione progressione
+async function populateProgressione(data) {
+    const datiProgressione = data.datiScheda?.progressione || {};
+    
+    document.getElementById('promessaDisplay').textContent = datiProgressione.promessa || '-';
+    document.getElementById('brevettoDisplay').textContent = datiProgressione.brevetto || '-';
+    document.getElementById('specialitaDisplay').textContent = datiProgressione.specialita || '-';
+    document.getElementById('cordaDisplay').textContent = datiProgressione.corda || '-';
 }
 
 // Funzione per aggiornare lo stile del menu di navigazione
