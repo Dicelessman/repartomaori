@@ -118,6 +118,7 @@ async function initCache() {
     }
 }
 
+// Funzione per aprire il database
 function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(CACHE_NAME, CACHE_VERSION);
@@ -137,6 +138,13 @@ function openDB() {
             }
             if (!db.objectStoreNames.contains('metadata')) {
                 db.createObjectStore('metadata', { keyPath: 'key' });
+            }
+            // Crea gli store per i backup
+            if (!db.objectStoreNames.contains(BACKUP_CONFIG.backupStore)) {
+                db.createObjectStore(BACKUP_CONFIG.backupStore, { keyPath: 'timestamp' });
+            }
+            if (!db.objectStoreNames.contains(BACKUP_CONFIG.metadataStore)) {
+                db.createObjectStore(BACKUP_CONFIG.metadataStore, { keyPath: 'id' });
             }
         };
     });
@@ -434,7 +442,10 @@ async function initScheda() {
         showLoader();
         showLoadingIndicator();
         
-        // Inizializza la cache e il sistema di backup
+        // Inizializza prima il database
+        await openDB();
+        
+        // Poi inizializza la cache e il sistema di backup
         await Promise.all([
             initCache(),
             initBackupSystem()
@@ -484,7 +495,7 @@ async function initScheda() {
         // Carica la prima sezione
         await caricaSezione('anagrafici');
         
-        // Aggiungi l'interfaccia dei backup
+        // Aggiungi l'interfaccia dei backup solo dopo che tutto è stato inizializzato
         document.body.appendChild(createBackupInterface());
         await updateBackupInterface();
 
@@ -503,7 +514,11 @@ async function initScheda() {
     } catch (error) {
         console.error('Errore durante l\'inizializzazione della scheda:', error);
         updateState({ error, isLoading: false });
-        showToast('Si è verificato un errore durante il caricamento della scheda. Riprova più tardi.', 'error');
+        showNotification(
+            'Errore di Inizializzazione',
+            'Si è verificato un errore durante l\'inizializzazione della scheda',
+            NOTIFICATION_TYPES.ERROR
+        );
         hideLoader();
         hideLoadingIndicator();
     }
@@ -1300,12 +1315,6 @@ async function populateProgressione(data) {
 async function initBackupSystem() {
     try {
         const db = await openDB();
-        if (!db.objectStoreNames.contains(BACKUP_CONFIG.backupStore)) {
-            db.createObjectStore(BACKUP_CONFIG.backupStore, { keyPath: 'timestamp' });
-        }
-        if (!db.objectStoreNames.contains(BACKUP_CONFIG.metadataStore)) {
-            db.createObjectStore(BACKUP_CONFIG.metadataStore, { keyPath: 'id' });
-        }
         console.log('Sistema di backup inizializzato');
         return true;
     } catch (error) {
