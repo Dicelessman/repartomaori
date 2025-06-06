@@ -808,6 +808,170 @@
             UPDATE: 'update'
         };
 
+        // Sistema di notifiche migliorato
+        const NOTIFICATION_SYSTEM = {
+            container: null,
+            notifications: [],
+            
+            init() {
+                this.container = document.createElement('div');
+                this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+                document.body.appendChild(this.container);
+            },
+            
+            show(title, message, type = NOTIFICATION_TYPES.UPDATE, duration = 5000) {
+                const notification = document.createElement('div');
+                notification.className = `transform transition-all duration-300 ease-in-out ${
+                    type === NOTIFICATION_TYPES.ERROR ? 'bg-red-500' :
+                    type === NOTIFICATION_TYPES.SUCCESS ? 'bg-green-500' :
+                    type === NOTIFICATION_TYPES.WARNING ? 'bg-yellow-500' :
+                    type === NOTIFICATION_TYPES.INFO ? 'bg-blue-500' :
+                    'bg-primary'
+                } text-white p-4 rounded-lg shadow-lg max-w-md`;
+                
+                notification.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="flex-1">
+                            <div class="font-bold">${title}</div>
+                            <div class="text-sm mt-1">${message}</div>
+                        </div>
+                        <button class="ml-4 text-white hover:text-gray-200 focus:outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                // Aggiungi l'animazione di entrata
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                
+                this.container.appendChild(notification);
+                this.notifications.push(notification);
+                
+                // Anima l'entrata
+                requestAnimationFrame(() => {
+                    notification.style.transform = 'translateX(0)';
+                    notification.style.opacity = '1';
+                });
+                
+                // Gestisci il pulsante di chiusura
+                const closeButton = notification.querySelector('button');
+                closeButton.addEventListener('click', () => this.dismiss(notification));
+                
+                // Auto-dismiss dopo la durata specificata
+                if (duration > 0) {
+                    setTimeout(() => this.dismiss(notification), duration);
+                }
+            },
+            
+            dismiss(notification) {
+                const index = this.notifications.indexOf(notification);
+                if (index > -1) {
+                    this.notifications.splice(index, 1);
+                }
+                
+                // Anima l'uscita
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                
+                // Rimuovi dopo l'animazione
+                setTimeout(() => {
+                    if (notification.parentNode === this.container) {
+                        this.container.removeChild(notification);
+                    }
+                }, 300);
+            }
+        };
+
+        // Sistema di caricamento
+        const LOADING_SYSTEM = {
+            overlay: null,
+            spinner: null,
+            message: null,
+            
+            init() {
+                this.overlay = document.createElement('div');
+                this.overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center';
+                
+                this.spinner = document.createElement('div');
+                this.spinner.className = 'animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent';
+                
+                this.message = document.createElement('div');
+                this.message.className = 'mt-4 text-white text-lg';
+                
+                this.overlay.appendChild(this.spinner);
+                this.overlay.appendChild(this.message);
+                document.body.appendChild(this.overlay);
+            },
+            
+            show(message = 'Caricamento in corso...') {
+                this.message.textContent = message;
+                this.overlay.classList.remove('hidden');
+                this.overlay.classList.add('flex');
+            },
+            
+            hide() {
+                this.overlay.classList.add('hidden');
+                this.overlay.classList.remove('flex');
+            }
+        };
+
+        // Sistema di conferma
+        const CONFIRM_SYSTEM = {
+            modal: null,
+            resolve: null,
+            
+            init() {
+                this.modal = document.createElement('div');
+                this.modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center';
+                this.modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 class="text-lg font-bold mb-2" id="confirmTitle"></h3>
+                        <p class="text-gray-600 mb-4" id="confirmMessage"></p>
+                        <div class="flex justify-end space-x-2">
+                            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" id="confirmCancel">
+                                Annulla
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark" id="confirmOk">
+                                Conferma
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(this.modal);
+                
+                // Gestisci i pulsanti
+                this.modal.querySelector('#confirmCancel').addEventListener('click', () => this.resolve(false));
+                this.modal.querySelector('#confirmOk').addEventListener('click', () => this.resolve(true));
+            },
+            
+            async show(title, message) {
+                this.modal.querySelector('#confirmTitle').textContent = title;
+                this.modal.querySelector('#confirmMessage').textContent = message;
+                
+                this.modal.classList.remove('hidden');
+                this.modal.classList.add('flex');
+                
+                return new Promise(resolve => {
+                    this.resolve = (result) => {
+                        this.modal.classList.add('hidden');
+                        this.modal.classList.remove('flex');
+                        resolve(result);
+                    };
+                });
+            }
+        };
+
+        // Inizializza i sistemi
+        document.addEventListener('DOMContentLoaded', () => {
+            NOTIFICATION_SYSTEM.init();
+            LOADING_SYSTEM.init();
+            CONFIRM_SYSTEM.init();
+        });
+
         // Funzioni di utilità
         window.chiama = (tipo) => {
             let numero;
@@ -1227,6 +1391,22 @@
         // Funzione per salvare i dati
         async function saveData(userId) {
             try {
+                // Mostra il caricamento
+                LOADING_SYSTEM.show('Salvataggio in corso...');
+                
+                // Chiedi conferma se ci sono modifiche significative
+                const hasChanges = hasSignificantChanges(currentUserData, userData);
+                if (hasChanges) {
+                    const confirmed = await CONFIRM_SYSTEM.show(
+                        'Conferma Modifiche',
+                        'Stai per salvare modifiche significative. Vuoi procedere?'
+                    );
+                    if (!confirmed) {
+                        LOADING_SYSTEM.hide();
+                        return;
+                    }
+                }
+                
                 // Raccogli i dati solo dai campi che esistono
                 const userData = {
                     datiScheda: {
@@ -1407,13 +1587,17 @@
                 // Crea un backup automatico
                 await createBackup(userId);
                 
+                // Nascondi il caricamento
+                LOADING_SYSTEM.hide();
+                
                 showNotification(
                     'Modifica Salvata',
                     'I dati sono stati aggiornati con successo',
-                    NOTIFICATION_TYPES.UPDATE
+                    NOTIFICATION_TYPES.SUCCESS
                 );
             } catch (error) {
                 console.error("Errore durante il salvataggio:", error);
+                LOADING_SYSTEM.hide();
                 showNotification(
                     'Errore di Salvataggio',
                     'Si è verificato un errore durante il salvataggio dei dati',
@@ -1543,25 +1727,7 @@
 
         // Funzione per mostrare le notifiche
         function showNotification(title, message, type = NOTIFICATION_TYPES.UPDATE) {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-                type === NOTIFICATION_TYPES.ERROR ? 'bg-red-500' :
-                type === NOTIFICATION_TYPES.SUCCESS ? 'bg-green-500' :
-                type === NOTIFICATION_TYPES.WARNING ? 'bg-yellow-500' :
-                type === NOTIFICATION_TYPES.INFO ? 'bg-blue-500' :
-                'bg-primary'
-            } text-white`;
-            
-            notification.innerHTML = `
-                <div class="font-bold">${title}</div>
-                <div class="text-sm">${message}</div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
+            NOTIFICATION_SYSTEM.show(title, message, type);
         }
 
         // Funzioni per la gestione dei backup
