@@ -773,6 +773,41 @@
         let isStaff = false;
         let isEditing = false;
 
+        // Configurazione per la validazione dei campi
+        const EDIT_CONFIG = {
+            validationRules: {
+                dataNascita: {
+                    required: true,
+                    pattern: /^\d{4}-\d{2}-\d{2}$/
+                },
+                codiceFiscale: {
+                    required: true,
+                    pattern: /^[A-Z]{6}[\d]{2}[A-Z][\d]{2}[A-Z][\d]{3}[A-Z]$/i
+                },
+                telefono: {
+                    required: true,
+                    pattern: /^\+?[\d\s-]{8,}$/
+                },
+                indirizzo: {
+                    required: true,
+                    minLength: 5
+                },
+                gruppoSanguigno: {
+                    required: true,
+                    pattern: /^[A-Z0-9+-]+$/
+                }
+            }
+        };
+
+        // Tipi di notifica
+        const NOTIFICATION_TYPES = {
+            SUCCESS: 'success',
+            ERROR: 'error',
+            WARNING: 'warning',
+            INFO: 'info',
+            UPDATE: 'update'
+        };
+
         // Funzioni di utilità
         window.chiama = (tipo) => {
             let numero;
@@ -843,13 +878,111 @@
             populateDisplayFields(currentUserData);
         }
 
+        // Funzioni di utilità per la formattazione e validazione
+        function formatFieldValue(fieldId, value) {
+            if (!value) return '-';
+            
+            switch (fieldId) {
+                case 'dataNascita':
+                    return new Date(value).toLocaleDateString('it-IT');
+                    
+                case 'telefono':
+                    return value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+                    
+                case 'codiceFiscale':
+                    return value.toUpperCase();
+                    
+                case 'gruppoSanguigno':
+                    return value.toUpperCase();
+                    
+                default:
+                    return value;
+            }
+        }
+
+        async function validateField(fieldId, value) {
+            console.log('Validazione campo:', fieldId, 'con valore:', value);
+            
+            const rules = EDIT_CONFIG.validationRules[fieldId];
+            if (!rules) return true;
+            
+            // Validazione campo obbligatorio
+            if (rules.required && !value) {
+                showNotification(
+                    'Campo Obbligatorio',
+                    `Il campo ${fieldId} è obbligatorio`,
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
+            
+            // Validazione lunghezza minima
+            if (rules.minLength && value.length < rules.minLength) {
+                showNotification(
+                    'Lunghezza Minima',
+                    `Il campo ${fieldId} deve contenere almeno ${rules.minLength} caratteri`,
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
+            
+            // Validazione pattern
+            if (rules.pattern && !rules.pattern.test(value)) {
+                showNotification(
+                    'Formato Non Valido',
+                    `Il formato del campo ${fieldId} non è valido`,
+                    NOTIFICATION_TYPES.ERROR
+                );
+                return false;
+            }
+            
+            // Validazioni specifiche per campo
+            switch (fieldId) {
+                case 'dataNascita':
+                    if (value && isNaN(new Date(value).getTime())) {
+                        showNotification(
+                            'Data Non Valida',
+                            'Inserisci una data valida',
+                            NOTIFICATION_TYPES.ERROR
+                        );
+                        return false;
+                    }
+                    break;
+                    
+                case 'telefono':
+                    if (value && !/^\+?[\d\s-]{8,}$/.test(value)) {
+                        showNotification(
+                            'Numero Non Valido',
+                            'Inserisci un numero di telefono valido',
+                            NOTIFICATION_TYPES.ERROR
+                        );
+                        return false;
+                    }
+                    break;
+                    
+                case 'codiceFiscale':
+                    if (value && !/^[A-Z]{6}[\d]{2}[A-Z][\d]{2}[A-Z][\d]{3}[A-Z]$/.test(value.toUpperCase())) {
+                        showNotification(
+                            'Codice Fiscale Non Valido',
+                            'Inserisci un codice fiscale valido',
+                            NOTIFICATION_TYPES.ERROR
+                        );
+                        return false;
+                    }
+                    break;
+            }
+            
+            return true;
+        }
+
         // Funzioni per il popolamento dei campi
         function populateDisplayFields(userData) {
             // Funzione di utilità per impostare il testo in modo sicuro
             function setTextContent(elementId, value) {
                 const element = document.getElementById(elementId);
                 if (element) {
-                    element.textContent = value || '-';
+                    const fieldId = elementId.replace('Display', '');
+                    element.textContent = formatFieldValue(fieldId, value) || '-';
                 }
             }
 
@@ -1086,163 +1219,183 @@
 
         // Funzione per salvare i dati
         async function saveData(userId) {
-            const userData = {
-                datiScheda: {
-                    anagrafici: {
-                        dataNascita: document.getElementById('dataNascitaEdit').value,
-                        codiceFiscale: document.getElementById('codiceFiscaleEdit').value,
-                        indirizzo: document.getElementById('indirizzoEdit').value,
-                        telefono: document.getElementById('telefonoEdit').value
-                    },
-                    contatti: {
-                        genitore1: {
-                            nome: document.getElementById('genitore1NomeEdit').value,
-                            email: document.getElementById('genitore1EmailEdit').value,
-                            numero: document.getElementById('genitore1NumeroEdit').value
+            try {
+                const userData = {
+                    datiScheda: {
+                        anagrafici: {
+                            dataNascita: document.getElementById('dataNascitaEdit').value,
+                            codiceFiscale: document.getElementById('codiceFiscaleEdit').value,
+                            indirizzo: document.getElementById('indirizzoEdit').value,
+                            telefono: document.getElementById('telefonoEdit').value
                         },
-                        genitore2: {
-                            nome: document.getElementById('genitore2NomeEdit').value,
-                            email: document.getElementById('genitore2EmailEdit').value,
-                            numero: document.getElementById('genitore2NumeroEdit').value
-                        }
-                    },
-                    sanitarie: {
-                        gruppoSanguigno: document.getElementById('gruppoSanguignoEdit').value,
-                        intolleranze: document.getElementById('intolleranzeEdit').value,
-                        allergie: document.getElementById('allergieEdit').value,
-                        farmaci: document.getElementById('farmaciEdit').value
-                    },
-                    progressione: {
-                        promessa: document.getElementById('promessaEdit').value,
-                        primaTraccia: {
-                            data: document.getElementById('primaTracciaDataEdit').value,
-                            sfida: document.getElementById('primaTracciaSfidaEdit').value
-                        },
-                        secondaTraccia: {
-                            data: document.getElementById('secondaTracciaDataEdit').value,
-                            sfida: document.getElementById('secondaTracciaSfidaEdit').value
-                        },
-                        terzaTraccia: {
-                            data: document.getElementById('terzaTracciaDataEdit').value,
-                            sfida: document.getElementById('terzaTracciaSfidaEdit').value
-                        }
-                    },
-                    eventi: {
-                        campiEstivi: {
-                            1: {
-                                luogo: document.getElementById('campoEstivo1LuogoEdit').value,
-                                anno: document.getElementById('campoEstivo1AnnoEdit').value
+                        contatti: {
+                            genitore1: {
+                                nome: document.getElementById('genitore1NomeEdit').value,
+                                email: document.getElementById('genitore1EmailEdit').value,
+                                numero: document.getElementById('genitore1NumeroEdit').value
                             },
-                            2: {
-                                luogo: document.getElementById('campoEstivo2LuogoEdit').value,
-                                anno: document.getElementById('campoEstivo2AnnoEdit').value
-                            },
-                            3: {
-                                luogo: document.getElementById('campoEstivo3LuogoEdit').value,
-                                anno: document.getElementById('campoEstivo3AnnoEdit').value
-                            },
-                            4: {
-                                luogo: document.getElementById('campoEstivo4LuogoEdit').value,
-                                anno: document.getElementById('campoEstivo4AnnoEdit').value
+                            genitore2: {
+                                nome: document.getElementById('genitore2NomeEdit').value,
+                                email: document.getElementById('genitore2EmailEdit').value,
+                                numero: document.getElementById('genitore2NumeroEdit').value
                             }
                         },
-                        tecnicamp: {
-                            1: {
-                                luogo: document.getElementById('tecnicamp1LuogoEdit').value,
-                                corso: document.getElementById('tecnicamp1CorsoEdit').value,
-                                anno: document.getElementById('tecnicamp1AnnoEdit').value
+                        sanitarie: {
+                            gruppoSanguigno: document.getElementById('gruppoSanguignoEdit').value,
+                            intolleranze: document.getElementById('intolleranzeEdit').value,
+                            allergie: document.getElementById('allergieEdit').value,
+                            farmaci: document.getElementById('farmaciEdit').value
+                        },
+                        progressione: {
+                            promessa: document.getElementById('promessaEdit').value,
+                            primaTraccia: {
+                                data: document.getElementById('primaTracciaDataEdit').value,
+                                sfida: document.getElementById('primaTracciaSfidaEdit').value
                             },
-                            2: {
-                                luogo: document.getElementById('tecnicamp2LuogoEdit').value,
-                                corso: document.getElementById('tecnicamp2CorsoEdit').value,
-                                anno: document.getElementById('tecnicamp2AnnoEdit').value
+                            secondaTraccia: {
+                                data: document.getElementById('secondaTracciaDataEdit').value,
+                                sfida: document.getElementById('secondaTracciaSfidaEdit').value
                             },
-                            3: {
-                                luogo: document.getElementById('tecnicamp3LuogoEdit').value,
-                                corso: document.getElementById('tecnicamp3CorsoEdit').value,
-                                anno: document.getElementById('tecnicamp3AnnoEdit').value
-                            },
-                            4: {
-                                luogo: document.getElementById('tecnicamp4LuogoEdit').value,
-                                corso: document.getElementById('tecnicamp4CorsoEdit').value,
-                                anno: document.getElementById('tecnicamp4AnnoEdit').value
+                            terzaTraccia: {
+                                data: document.getElementById('terzaTracciaDataEdit').value,
+                                sfida: document.getElementById('terzaTracciaSfidaEdit').value
                             }
                         },
-                        jamboree: {
-                            luogo: document.getElementById('jamboreeLuogoEdit').value,
-                            anno: document.getElementById('jamboreeAnnoEdit').value
-                        }
-                    },
-                    documenti: {
-                        quotaAnnuale: {
-                            1: {
-                                data: document.getElementById('quotaAnnuale1DataEdit').value,
-                                pagata: document.getElementById('quotaAnnuale1CheckEdit').checked
+                        eventi: {
+                            campiEstivi: {
+                                1: {
+                                    luogo: document.getElementById('campoEstivo1LuogoEdit').value,
+                                    anno: document.getElementById('campoEstivo1AnnoEdit').value
+                                },
+                                2: {
+                                    luogo: document.getElementById('campoEstivo2LuogoEdit').value,
+                                    anno: document.getElementById('campoEstivo2AnnoEdit').value
+                                },
+                                3: {
+                                    luogo: document.getElementById('campoEstivo3LuogoEdit').value,
+                                    anno: document.getElementById('campoEstivo3AnnoEdit').value
+                                },
+                                4: {
+                                    luogo: document.getElementById('campoEstivo4LuogoEdit').value,
+                                    anno: document.getElementById('campoEstivo4AnnoEdit').value
+                                }
                             },
-                            2: {
-                                data: document.getElementById('quotaAnnuale2DataEdit').value,
-                                pagata: document.getElementById('quotaAnnuale2CheckEdit').checked
+                            tecnicamp: {
+                                1: {
+                                    luogo: document.getElementById('tecnicamp1LuogoEdit').value,
+                                    corso: document.getElementById('tecnicamp1CorsoEdit').value,
+                                    anno: document.getElementById('tecnicamp1AnnoEdit').value
+                                },
+                                2: {
+                                    luogo: document.getElementById('tecnicamp2LuogoEdit').value,
+                                    corso: document.getElementById('tecnicamp2CorsoEdit').value,
+                                    anno: document.getElementById('tecnicamp2AnnoEdit').value
+                                },
+                                3: {
+                                    luogo: document.getElementById('tecnicamp3LuogoEdit').value,
+                                    corso: document.getElementById('tecnicamp3CorsoEdit').value,
+                                    anno: document.getElementById('tecnicamp3AnnoEdit').value
+                                },
+                                4: {
+                                    luogo: document.getElementById('tecnicamp4LuogoEdit').value,
+                                    corso: document.getElementById('tecnicamp4CorsoEdit').value,
+                                    anno: document.getElementById('tecnicamp4AnnoEdit').value
+                                }
                             },
-                            3: {
-                                data: document.getElementById('quotaAnnuale3DataEdit').value,
-                                pagata: document.getElementById('quotaAnnuale3CheckEdit').checked
-                            },
-                            4: {
-                                data: document.getElementById('quotaAnnuale4DataEdit').value,
-                                pagata: document.getElementById('quotaAnnuale4CheckEdit').checked
+                            jamboree: {
+                                luogo: document.getElementById('jamboreeLuogoEdit').value,
+                                anno: document.getElementById('jamboreeAnnoEdit').value
                             }
                         },
-                        moduloIscrizione: {
-                            presente: document.getElementById('moduloIscrizioneCheckEdit').checked
-                        },
-                        moduloSanitario: {
-                            1: {
-                                data: document.getElementById('moduloSanitario1DataEdit').value,
-                                presente: document.getElementById('moduloSanitario1CheckEdit').checked
+                        documenti: {
+                            quotaAnnuale: {
+                                1: {
+                                    data: document.getElementById('quotaAnnuale1DataEdit').value,
+                                    pagata: document.getElementById('quotaAnnuale1CheckEdit').checked
+                                },
+                                2: {
+                                    data: document.getElementById('quotaAnnuale2DataEdit').value,
+                                    pagata: document.getElementById('quotaAnnuale2CheckEdit').checked
+                                },
+                                3: {
+                                    data: document.getElementById('quotaAnnuale3DataEdit').value,
+                                    pagata: document.getElementById('quotaAnnuale3CheckEdit').checked
+                                },
+                                4: {
+                                    data: document.getElementById('quotaAnnuale4DataEdit').value,
+                                    pagata: document.getElementById('quotaAnnuale4CheckEdit').checked
+                                }
                             },
-                            2: {
-                                data: document.getElementById('moduloSanitario2DataEdit').value,
-                                presente: document.getElementById('moduloSanitario2CheckEdit').checked
+                            moduloIscrizione: {
+                                presente: document.getElementById('moduloIscrizioneCheckEdit').checked
                             },
-                            3: {
-                                data: document.getElementById('moduloSanitario3DataEdit').value,
-                                presente: document.getElementById('moduloSanitario3CheckEdit').checked
+                            moduloSanitario: {
+                                1: {
+                                    data: document.getElementById('moduloSanitario1DataEdit').value,
+                                    presente: document.getElementById('moduloSanitario1CheckEdit').checked
+                                },
+                                2: {
+                                    data: document.getElementById('moduloSanitario2DataEdit').value,
+                                    presente: document.getElementById('moduloSanitario2CheckEdit').checked
+                                },
+                                3: {
+                                    data: document.getElementById('moduloSanitario3DataEdit').value,
+                                    presente: document.getElementById('moduloSanitario3CheckEdit').checked
+                                },
+                                4: {
+                                    data: document.getElementById('moduloSanitario4DataEdit').value,
+                                    presente: document.getElementById('moduloSanitario4CheckEdit').checked
+                                }
                             },
-                            4: {
-                                data: document.getElementById('moduloSanitario4DataEdit').value,
-                                presente: document.getElementById('moduloSanitario4CheckEdit').checked
-                            }
-                        },
-                        moduloPrivacy: {
-                            1: {
-                                data: document.getElementById('moduloPrivacy1DataEdit').value,
-                                presente: document.getElementById('moduloPrivacy1CheckEdit').checked
-                            },
-                            2: {
-                                data: document.getElementById('moduloPrivacy2DataEdit').value,
-                                presente: document.getElementById('moduloPrivacy2CheckEdit').checked
-                            },
-                            3: {
-                                data: document.getElementById('moduloPrivacy3DataEdit').value,
-                                presente: document.getElementById('moduloPrivacy3CheckEdit').checked
-                            },
-                            4: {
-                                data: document.getElementById('moduloPrivacy4DataEdit').value,
-                                presente: document.getElementById('moduloPrivacy4CheckEdit').checked
+                            moduloPrivacy: {
+                                1: {
+                                    data: document.getElementById('moduloPrivacy1DataEdit').value,
+                                    presente: document.getElementById('moduloPrivacy1CheckEdit').checked
+                                },
+                                2: {
+                                    data: document.getElementById('moduloPrivacy2DataEdit').value,
+                                    presente: document.getElementById('moduloPrivacy2CheckEdit').checked
+                                },
+                                3: {
+                                    data: document.getElementById('moduloPrivacy3DataEdit').value,
+                                    presente: document.getElementById('moduloPrivacy3CheckEdit').checked
+                                },
+                                4: {
+                                    data: document.getElementById('moduloPrivacy4DataEdit').value,
+                                    presente: document.getElementById('moduloPrivacy4CheckEdit').checked
+                                }
                             }
                         }
                     }
-                }
-            };
+                };
 
-            try {
+                // Validazione dei campi
+                for (const [field, value] of Object.entries(userData.datiScheda.anagrafici)) {
+                    if (!await validateField(field, value)) {
+                        return;
+                    }
+                }
+
                 await updateDoc(doc(db, "utenti", userId), userData);
                 currentUserData = { ...currentUserData, ...userData };
                 exitEditMode();
                 populateDisplayFields(currentUserData);
+                
+                // Crea un backup automatico
+                await createBackup(userId);
+                
+                showNotification(
+                    'Modifica Salvata',
+                    'I dati sono stati aggiornati con successo',
+                    NOTIFICATION_TYPES.UPDATE
+                );
             } catch (error) {
                 console.error("Errore durante il salvataggio:", error);
-                alert("Si è verificato un errore durante il salvataggio dei dati.");
+                showNotification(
+                    'Errore di Salvataggio',
+                    'Si è verificato un errore durante il salvataggio dei dati',
+                    NOTIFICATION_TYPES.ERROR
+                );
             }
         }
 
@@ -1364,6 +1517,29 @@
         document.addEventListener('DOMContentLoaded', () => {
             mostraSezione('anagrafici');
         });
+
+        // Funzione per mostrare le notifiche
+        function showNotification(title, message, type = NOTIFICATION_TYPES.UPDATE) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === NOTIFICATION_TYPES.ERROR ? 'bg-red-500' :
+                type === NOTIFICATION_TYPES.SUCCESS ? 'bg-green-500' :
+                type === NOTIFICATION_TYPES.WARNING ? 'bg-yellow-500' :
+                type === NOTIFICATION_TYPES.INFO ? 'bg-blue-500' :
+                'bg-primary'
+            } text-white`;
+            
+            notification.innerHTML = `
+                <div class="font-bold">${title}</div>
+                <div class="text-sm">${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
     </script>
     <script>
         // Gestione delle sfide e date
