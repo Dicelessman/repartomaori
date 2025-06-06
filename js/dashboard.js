@@ -2,6 +2,8 @@ import { checkAuth, isStaffApproved } from './auth.js';
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebaseConfig.js';
 import { showLoader, hideLoader, showToast } from './ui.js';
+import { createUserWithEmailAndPassword, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
 // Funzione per inizializzare la dashboard
 async function initDashboard() {
@@ -91,6 +93,66 @@ function createSchedaElement(id, scheda) {
     `;
     return div;
 }
+
+// Gestione del modal per aggiungere un nuovo esploratore
+const addExplorerBtn = document.getElementById('addExplorerBtn');
+const addExplorerModal = document.getElementById('addExplorerModal');
+const cancelAddExplorer = document.getElementById('cancelAddExplorer');
+const addExplorerForm = document.getElementById('addExplorerForm');
+const confirmAddExplorer = document.getElementById('confirmAddExplorer');
+
+// Apri il modal
+addExplorerBtn.addEventListener('click', () => {
+    addExplorerModal.classList.remove('hidden');
+});
+
+// Chiudi il modal
+cancelAddExplorer.addEventListener('click', () => {
+    addExplorerModal.classList.add('hidden');
+    addExplorerForm.reset();
+});
+
+// Gestione dell'invio del form
+confirmAddExplorer.addEventListener('click', async () => {
+    const nome = document.getElementById('nome').value.trim();
+    const cognome = document.getElementById('cognome').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!nome || !cognome || !email || !password) {
+        showToast('Tutti i campi sono obbligatori', 'error');
+        return;
+    }
+
+    try {
+        showLoader();
+        // Crea l'utente su Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Crea il documento dell'esploratore su Firestore
+        const explorerData = {
+            nome,
+            cognome,
+            email,
+            staff: false,
+            approvato: false,
+            createdAt: new Date()
+        };
+        await setDoc(doc(db, 'utenti', user.uid), explorerData);
+
+        // Aggiorna la dashboard
+        await loadDashboardData();
+        addExplorerModal.classList.add('hidden');
+        addExplorerForm.reset();
+        showToast('Esploratore aggiunto con successo', 'success');
+    } catch (error) {
+        console.error('Errore durante l\'aggiunta dell\'esploratore:', error);
+        showToast('Errore durante l\'aggiunta dell\'esploratore. Riprova più tardi.', 'error');
+    } finally {
+        hideLoader();
+    }
+});
 
 // Inizializza la dashboard quando il documento è pronto
 document.addEventListener('DOMContentLoaded', initDashboard); 
