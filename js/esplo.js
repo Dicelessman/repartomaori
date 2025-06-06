@@ -13,12 +13,6 @@ const state = {
     lastUpdate: null
 };
 
-// Funzione per aggiornare lo stato
-function updateState(newState) {
-    Object.assign(state, newState);
-    console.log('Stato aggiornato:', state);
-}
-
 // Sistema di cache avanzato
 const CACHE_VERSION = 2;
 const CACHE_NAME = `esploratore-cache-v${CACHE_VERSION}`;
@@ -75,43 +69,21 @@ const EDIT_CONFIG = {
     }
 };
 
-// Configurazione per le icone
-const ICON_CONFIG = {
-    update: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxMXY0YTIgMiAwIDAgMS0yIDJINWEyIDIgMCAwIDEtMi0ydi00Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iNyAxMCAxMiAxNSAxNyAxMCI+PC9wb2x5bGluZT48cGF0aCBkPSJNMTIgMTVWNyI+PC9wYXRoPjwvc3ZnPg==',
-    error: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIj48L2NpcmNsZT48bGluZSB4MT0iMTUiIHkxPSI5IiB4Mj0iOSIgeTI9IjE1Ij48L2xpbmU+PGxpbmUgeDE9IjkiIHkxPSI5IiB4Mj0iMTUiIHkyPSIxNSI+PC9saW5lPjwvc3ZnPg==',
-    sync: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMyA0djZoLTYiPjwvcGF0aD48cGF0aCBkPSJNMjAgMTVhOSA5IDAgMSAxLTIuNjgtNi45NCI+PC9wYXRoPjwvc3ZnPg==',
-    cache: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxNnYtMmE0IDQgMCAwIDAtNC00SDVhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PHJlY3QgeD0iMyIgeT0iMTYiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0IiByeD0iMiI+PC9yZWN0Pjwvc3ZnPg=='
-};
-
-// Funzione per calcolare il delay del retry
-function calculateRetryDelay(attempt) {
-    const delay = Math.min(
-        RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffFactor, attempt),
-        RETRY_CONFIG.maxDelay
-    );
-    return delay + Math.random() * 1000; // Aggiunge jitter per evitare thundering herd
+// Funzione per aggiornare lo stato
+function updateState(newState) {
+    Object.assign(state, newState);
+    console.log('Stato aggiornato:', state);
 }
 
-// Funzione per eseguire operazioni con retry
-async function executeWithRetry(operation, operationName) {
-    let lastError;
-    
-    for (let attempt = 0; attempt < RETRY_CONFIG.maxAttempts; attempt++) {
-        try {
-            return await operation();
-        } catch (error) {
-            lastError = error;
-            console.warn(`Tentativo ${attempt + 1}/${RETRY_CONFIG.maxAttempts} fallito per ${operationName}:`, error);
-            
-            if (attempt < RETRY_CONFIG.maxAttempts - 1) {
-                const delay = calculateRetryDelay(attempt);
-                console.log(`Riprovo tra ${Math.round(delay/1000)} secondi...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-    
-    throw new Error(`Operazione ${operationName} fallita dopo ${RETRY_CONFIG.maxAttempts} tentativi: ${lastError.message}`);
+// Funzione per ottenere l'icona
+function getNotificationIcon(type) {
+    const ICON_CONFIG = {
+        update: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxMXY0YTIgMiAwIDAgMS0yIDJINWEyIDIgMCAwIDEtMi0ydi00Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iNyAxMCAxMiAxNSAxNyAxMCI+PC9wb2x5bGluZT48cGF0aCBkPSJNMTIgMTVWNyI+PC9wYXRoPjwvc3ZnPg==',
+        error: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIj48L2NpcmNsZT48bGluZSB4MT0iMTUiIHkxPSI5IiB4Mj0iOSIgeTI9IjE1Ij48L2xpbmU+PGxpbmUgeDE9IjkiIHkxPSI5IiB4Mj0iMTUiIHkyPSIxNSI+PC9saW5lPjwvc3ZnPg==',
+        sync: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMyA0djZoLTYiPjwvcGF0aD48cGF0aCBkPSJNMjAgMTVhOSA5IDAgMSAxLTIuNjgtNi45NCI+PC9wYXRoPjwvc3ZnPg==',
+        cache: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxNnYtMmE0IDQgMCAwIDAtNC00SDVhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PHJlY3QgeD0iMyIgeT0iMTYiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0IiByeD0iMiI+PC9yZWN0Pjwvc3ZnPg=='
+    };
+    return ICON_CONFIG[type] || ICON_CONFIG.update;
 }
 
 // Funzione per aprire il database
@@ -146,35 +118,27 @@ function openDB() {
     });
 }
 
-async function saveToCache(storeName, data) {
+// Funzioni per la gestione della cache
+async function initCache() {
     try {
         const db = await openDB();
-        const tx = db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        
-        if (Array.isArray(data)) {
-            await Promise.all(data.map(item => store.put(item)));
-        } else {
-            await store.put(data);
-        }
-        
-        await tx.complete;
-        console.log(`Dati salvati in cache (${storeName})`);
+        console.log('Cache inizializzata con successo');
+        return db;
     } catch (error) {
-        console.error(`Errore nel salvataggio in cache (${storeName}):`, error);
+        console.error('Errore nell\'inizializzazione della cache:', error);
+        throw error;
     }
 }
 
-async function getFromCache(storeName, key) {
+// Funzione per inizializzare il sistema di backup
+async function initBackupSystem() {
     try {
         const db = await openDB();
-        const tx = db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const data = await store.get(key);
-        return data;
+        console.log('Sistema di backup inizializzato');
+        return true;
     } catch (error) {
-        console.error(`Errore nel recupero dalla cache (${storeName}):`, error);
-        return null;
+        console.error('Errore nell\'inizializzazione del sistema di backup:', error);
+        return false;
     }
 }
 
@@ -214,181 +178,67 @@ function createNotification(title, message, type) {
     };
 }
 
-// Funzione di throttling
-function throttle(func, limit) {
-    let inThrottle;
-    return function(...args) {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-// Funzione per ottimizzare il rendering
-function optimizeRendering() {
-    // Usa requestAnimationFrame per gli aggiornamenti UI
-    let pendingUpdate = false;
-    
-    return function(updateFunction) {
-        if (!pendingUpdate) {
-            pendingUpdate = true;
-            requestAnimationFrame(() => {
-                updateFunction();
-                pendingUpdate = false;
-            });
-        }
-    };
-}
-
-const scheduleUpdate = optimizeRendering();
-
-// Ottimizzazione della funzione handleSearchResults
-const throttledHandleSearchResults = throttle((results) => {
-    scheduleUpdate(() => {
-        const resultsContainer = document.getElementById('searchResults');
-        const resultsList = document.getElementById('resultsList');
-        
-        if (!results.length) {
-            resultsContainer.classList.add('hidden');
-            return;
-        }
-
-        // Usa DocumentFragment per migliori performance
-        const fragment = document.createDocumentFragment();
-        results.forEach(result => {
-            const div = document.createElement('div');
-            div.className = 'p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer';
-            div.onclick = () => navigateToResult(result.path);
-            div.innerHTML = `
-                <div class="font-medium">${result.value}</div>
-                <div class="text-sm text-gray-600">
-                    ${Object.entries(result.context)
-                        .map(([k, v]) => `${k}: ${v}`)
-                        .join(' | ')}
-                </div>
-            `;
-            fragment.appendChild(div);
-        });
-
-        resultsList.innerHTML = '';
-        resultsList.appendChild(fragment);
-        resultsContainer.classList.remove('hidden');
-    });
-}, THROTTLE_CONFIG.search);
-
-// Ottimizzazione della funzione updateNavigationStyle
-const throttledUpdateNavigationStyle = throttle((sezioneCorrente) => {
-    scheduleUpdate(() => {
-        const navButtons = document.querySelectorAll('nav button');
-        navButtons.forEach(button => {
-            const sezione = button.getAttribute('data-sezione');
-            if (sezione === sezioneCorrente) {
-                button.classList.add('text-white', 'bg-primary');
-                button.classList.remove('text-gray-600');
-            } else {
-                button.classList.remove('text-white', 'bg-primary');
-                button.classList.add('text-gray-600');
-            }
-        });
-    });
-}, THROTTLE_CONFIG.update);
-
-// Funzione per sincronizzare i dati con Firebase
-function syncWithFirebase(esploratoreId) {
-    const esploratoreRef = doc(db, "utenti", esploratoreId);
-    let retryCount = 0;
-    let pendingUpdate = false;
-    
-    return onSnapshot(esploratoreRef, 
-        async (doc) => {
-            retryCount = 0;
-            if (doc.exists()) {
-                const newData = doc.data();
-                const oldData = state.esploratoreData;
-                
-                // Evita aggiornamenti non necessari
-                if (JSON.stringify(oldData) === JSON.stringify(newData)) {
-                    return;
-                }
-                
-                // Usa requestAnimationFrame per gli aggiornamenti UI
-                if (!pendingUpdate) {
-                    pendingUpdate = true;
-                    requestAnimationFrame(() => {
-                        updateState({
-                            esploratoreData: newData,
-                            lastUpdate: new Date()
-                        });
-                        
-                        // Salva i dati in cache
-                        saveToCache('esploratori', {
-                            id: esploratoreId,
-                            data: newData,
-                            timestamp: Date.now()
-                        });
-                        
-                        // Verifica se ci sono cambiamenti significativi
-                        if (oldData && hasSignificantChanges(oldData, newData)) {
-                            showNotification(
-                                'Aggiornamento Dati',
-                                'Sono stati rilevati aggiornamenti nei dati dell\'esploratore',
-                                NOTIFICATION_TYPES.UPDATE
-                            );
-                        }
-                        
-                        // Aggiorna la sezione corrente se presente
-                        if (state.currentSezione) {
-                            caricaSezione(state.currentSezione);
-                        }
-                        
-                        pendingUpdate = false;
-                    });
-                }
-            }
-        },
-        async (error) => {
-            console.error('Errore nella sincronizzazione:', error);
-            retryCount++;
-            
-            if (retryCount <= RETRY_CONFIG.maxAttempts) {
-                const delay = calculateRetryDelay(retryCount - 1);
-                console.log(`Tentativo di riconnessione ${retryCount}/${RETRY_CONFIG.maxAttempts} tra ${Math.round(delay/1000)} secondi...`);
-                
-                showNotification(
-                    'Riconnessione in corso',
-                    `Tentativo ${retryCount} di ${RETRY_CONFIG.maxAttempts}`,
-                    NOTIFICATION_TYPES.SYNC
-                );
-                
-                await new Promise(resolve => setTimeout(resolve, delay));
-                return syncWithFirebase(esploratoreId);
-            }
-            
-            updateState({ error });
-            
-            // In caso di errore, prova a recuperare i dati dalla cache
-            const cachedData = await getFromCache('esploratori', esploratoreId);
-            if (cachedData) {
-                updateState({
-                    esploratoreData: cachedData.data,
-                    lastUpdate: new Date(cachedData.timestamp)
-                });
-                showNotification(
-                    'Utilizzo Dati in Cache',
-                    'I dati sono stati recuperati dalla cache locale',
-                    NOTIFICATION_TYPES.CACHE
-                );
-            } else {
-                showNotification(
-                    'Errore di Sincronizzazione',
-                    'Impossibile recuperare i dati. Riprova più tardi.',
-                    NOTIFICATION_TYPES.ERROR
-                );
-            }
-        }
+// Funzione per calcolare il delay del retry
+function calculateRetryDelay(attempt) {
+    const delay = Math.min(
+        RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffFactor, attempt),
+        RETRY_CONFIG.maxDelay
     );
+    return delay + Math.random() * 1000; // Aggiunge jitter per evitare thundering herd
+}
+
+// Funzione per eseguire operazioni con retry
+async function executeWithRetry(operation, operationName) {
+    let lastError;
+    
+    for (let attempt = 0; attempt < RETRY_CONFIG.maxAttempts; attempt++) {
+        try {
+            return await operation();
+        } catch (error) {
+            lastError = error;
+            console.warn(`Tentativo ${attempt + 1}/${RETRY_CONFIG.maxAttempts} fallito per ${operationName}:`, error);
+            
+            if (attempt < RETRY_CONFIG.maxAttempts - 1) {
+                const delay = calculateRetryDelay(attempt);
+                console.log(`Riprovo tra ${Math.round(delay/1000)} secondi...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    throw new Error(`Operazione ${operationName} fallita dopo ${RETRY_CONFIG.maxAttempts} tentativi: ${lastError.message}`);
+}
+
+async function saveToCache(storeName, data) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        
+        if (Array.isArray(data)) {
+            await Promise.all(data.map(item => store.put(item)));
+        } else {
+            await store.put(data);
+        }
+        
+        await tx.complete;
+        console.log(`Dati salvati in cache (${storeName})`);
+    } catch (error) {
+        console.error(`Errore nel salvataggio in cache (${storeName}):`, error);
+    }
+}
+
+async function getFromCache(storeName, key) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const data = await store.get(key);
+        return data;
+    } catch (error) {
+        console.error(`Errore nel recupero dalla cache (${storeName}):`, error);
+        return null;
+    }
 }
 
 // Funzione per verificare cambiamenti significativi
@@ -1290,17 +1140,6 @@ async function populateProgressione(data) {
 }
 
 // Funzioni per la gestione dei backup
-async function initBackupSystem() {
-    try {
-        const db = await openDB();
-        console.log('Sistema di backup inizializzato');
-        return true;
-    } catch (error) {
-        console.error('Errore nell\'inizializzazione del sistema di backup:', error);
-        return false;
-    }
-}
-
 async function createBackup(esploratoreId) {
     try {
         if (!state.esploratoreData) {
@@ -1738,22 +1577,164 @@ function setNestedValue(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
-// Funzioni per la gestione della cache
-async function initCache() {
-    try {
-        const db = await openDB();
-        console.log('Cache inizializzata con successo');
-        return db;
-    } catch (error) {
-        console.error('Errore nell\'inizializzazione della cache:', error);
-        throw error;
-    }
+// Funzione per sincronizzare i dati con Firebase
+function syncWithFirebase(esploratoreId) {
+    const esploratoreRef = doc(db, "utenti", esploratoreId);
+    let retryCount = 0;
+    let pendingUpdate = false;
+    
+    return onSnapshot(esploratoreRef, 
+        async (doc) => {
+            retryCount = 0;
+            if (doc.exists()) {
+                const newData = doc.data();
+                const oldData = state.esploratoreData;
+                
+                // Evita aggiornamenti non necessari
+                if (JSON.stringify(oldData) === JSON.stringify(newData)) {
+                    return;
+                }
+                
+                // Usa requestAnimationFrame per gli aggiornamenti UI
+                if (!pendingUpdate) {
+                    pendingUpdate = true;
+                    requestAnimationFrame(() => {
+                        updateState({
+                            esploratoreData: newData,
+                            lastUpdate: new Date()
+                        });
+                        
+                        // Salva i dati in cache
+                        saveToCache('esploratori', {
+                            id: esploratoreId,
+                            data: newData,
+                            timestamp: Date.now()
+                        });
+                        
+                        // Verifica se ci sono cambiamenti significativi
+                        if (oldData && hasSignificantChanges(oldData, newData)) {
+                            showNotification(
+                                'Aggiornamento Dati',
+                                'Sono stati rilevati aggiornamenti nei dati dell\'esploratore',
+                                NOTIFICATION_TYPES.UPDATE
+                            );
+                        }
+                        
+                        // Aggiorna la sezione corrente se presente
+                        if (state.currentSezione) {
+                            caricaSezione(state.currentSezione);
+                        }
+                        
+                        pendingUpdate = false;
+                    });
+                }
+            }
+        },
+        async (error) => {
+            console.error('Errore nella sincronizzazione:', error);
+            retryCount++;
+            
+            if (retryCount <= RETRY_CONFIG.maxAttempts) {
+                const delay = calculateRetryDelay(retryCount - 1);
+                console.log(`Tentativo di riconnessione ${retryCount}/${RETRY_CONFIG.maxAttempts} tra ${Math.round(delay/1000)} secondi...`);
+                
+                showNotification(
+                    'Riconnessione in corso',
+                    `Tentativo ${retryCount} di ${RETRY_CONFIG.maxAttempts}`,
+                    NOTIFICATION_TYPES.SYNC
+                );
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return syncWithFirebase(esploratoreId);
+            }
+            
+            updateState({ error });
+            
+            // In caso di errore, prova a recuperare i dati dalla cache
+            const cachedData = await getFromCache('esploratori', esploratoreId);
+            if (cachedData) {
+                updateState({
+                    esploratoreData: cachedData.data,
+                    lastUpdate: new Date(cachedData.timestamp)
+                });
+                showNotification(
+                    'Utilizzo Dati in Cache',
+                    'I dati sono stati recuperati dalla cache locale',
+                    NOTIFICATION_TYPES.CACHE
+                );
+            } else {
+                showNotification(
+                    'Errore di Sincronizzazione',
+                    'Impossibile recuperare i dati. Riprova più tardi.',
+                    NOTIFICATION_TYPES.ERROR
+                );
+            }
+        }
+    );
 }
 
-// Funzione per ottenere l'icona
-function getNotificationIcon(type) {
-    return ICON_CONFIG[type] || ICON_CONFIG.update;
+// Funzione di throttling
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
 }
+
+// Ottimizzazione della funzione handleSearchResults
+const throttledHandleSearchResults = throttle((results) => {
+    scheduleUpdate(() => {
+        const resultsContainer = document.getElementById('searchResults');
+        const resultsList = document.getElementById('resultsList');
+        
+        if (!results.length) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+
+        // Usa DocumentFragment per migliori performance
+        const fragment = document.createDocumentFragment();
+        results.forEach(result => {
+            const div = document.createElement('div');
+            div.className = 'p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer';
+            div.onclick = () => navigateToResult(result.path);
+            div.innerHTML = `
+                <div class="font-medium">${result.value}</div>
+                <div class="text-sm text-gray-600">
+                    ${Object.entries(result.context)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(' | ')}
+                </div>
+            `;
+            fragment.appendChild(div);
+        });
+
+        resultsList.innerHTML = '';
+        resultsList.appendChild(fragment);
+        resultsContainer.classList.remove('hidden');
+    });
+}, THROTTLE_CONFIG.search);
+
+// Ottimizzazione della funzione updateNavigationStyle
+const throttledUpdateNavigationStyle = throttle((sezioneCorrente) => {
+    scheduleUpdate(() => {
+        const navButtons = document.querySelectorAll('nav button');
+        navButtons.forEach(button => {
+            const sezione = button.getAttribute('data-sezione');
+            if (sezione === sezioneCorrente) {
+                button.classList.add('text-white', 'bg-primary');
+                button.classList.remove('text-gray-600');
+            } else {
+                button.classList.remove('text-white', 'bg-primary');
+                button.classList.add('text-gray-600');
+            }
+        });
+    });
+}, THROTTLE_CONFIG.update);
 
 // Inizializza la scheda quando il documento è pronto
 document.addEventListener('DOMContentLoaded', initScheda); 
