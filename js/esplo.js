@@ -352,6 +352,9 @@ window.caricaSezione = async function(sezione) {
             throw new Error('Dati esploratore incompleti');
         }
 
+        // Resetta il contenuto della sezione precedente
+        sezioniContent[sezione] = null;
+        
         // Carica il contenuto della sezione
         const content = await loadSezioneContent(sezione);
         
@@ -369,6 +372,32 @@ window.caricaSezione = async function(sezione) {
         
         // Popola i campi
         await loadSezioneData(sezione, esploratoreData);
+        
+        // Forza un aggiornamento visivo dei dati
+        if (sezione === 'anagrafici') {
+            const datiAnagrafici = esploratoreData.datiScheda?.anagrafici || {};
+            
+            // Aggiorna tutti i campi display
+            const dataNascitaDisplay = document.getElementById('dataNascitaDisplay');
+            const codiceFiscaleDisplay = document.getElementById('codiceFiscaleDisplay');
+            const indirizzoDisplay = document.getElementById('indirizzoDisplay');
+            const telefonoDisplay = document.getElementById('telefonoDisplay');
+            
+            if (dataNascitaDisplay) {
+                const dataNascita = datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
+                dataNascitaDisplay.textContent = dataNascita;
+            }
+            if (codiceFiscaleDisplay) {
+                codiceFiscaleDisplay.textContent = datiAnagrafici.codiceFiscale || '-';
+            }
+            if (indirizzoDisplay) {
+                indirizzoDisplay.textContent = datiAnagrafici.indirizzo || '-';
+            }
+            if (telefonoDisplay) {
+                telefonoDisplay.textContent = datiAnagrafici.telefono || '-';
+            }
+        }
+        
         currentSezione = sezione;
         hideLoader();
     } catch (error) {
