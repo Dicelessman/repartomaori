@@ -1375,17 +1375,33 @@ async function updateBackupList() {
         const db = await openDB();
         const tx = db.transaction(BACKUP_CONFIG.backupStore, 'readonly');
         const store = tx.objectStore(BACKUP_CONFIG.backupStore);
-        const backups = await store.getAll();
         
+        // Ottieni tutti i backup
+        const request = store.getAll();
+        const backups = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+        
+        // Filtra i backup per esploratore e ordina per timestamp
         const explorerBackups = backups
-            .filter(b => b.esploratoreId === esploratoreId)
+            .filter(b => b && b.esploratoreId === esploratoreId)
             .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (explorerBackups.length === 0) {
+            backupListContent.innerHTML = `
+                <div class="text-center text-gray-500 py-4">
+                    Nessun backup disponibile
+                </div>
+            `;
+            return;
+        }
 
         backupListContent.innerHTML = explorerBackups.map(backup => `
             <div class="backup-item bg-gray-50 p-3 rounded flex justify-between items-center">
                 <div class="text-sm">
                     <div class="font-medium">${new Date(backup.timestamp).toLocaleString('it-IT')}</div>
-                    <div class="text-gray-500">Versione: ${backup.version}</div>
+                    <div class="text-gray-500">Versione: ${backup.version || '1.0'}</div>
                 </div>
                 <button class="restore-backup-btn bg-primary text-white px-3 py-1 rounded text-sm hover:bg-primary-dark transition-colors"
                         data-timestamp="${backup.timestamp}">
@@ -1407,11 +1423,21 @@ async function updateBackupList() {
                     );
                 } catch (error) {
                     console.error('Errore durante il ripristino:', error);
+                    showNotification(
+                        'Errore di Ripristino',
+                        'Impossibile ripristinare il backup',
+                        NOTIFICATION_TYPES.ERROR
+                    );
                 }
             });
         });
     } catch (error) {
         console.error('Errore nell\'aggiornamento della lista backup:', error);
+        backupListContent.innerHTML = `
+            <div class="text-center text-red-500 py-4">
+                Errore nel caricamento dei backup
+            </div>
+        `;
     }
 }
 
