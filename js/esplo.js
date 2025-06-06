@@ -38,6 +38,74 @@ const SEARCH_CONFIG = {
     maxResults: 50
 };
 
+// Configurazione del sistema di retry
+const RETRY_CONFIG = {
+    maxAttempts: 3,
+    initialDelay: 1000,
+    maxDelay: 5000,
+    backoffFactor: 2
+};
+
+// Configurazione del throttling
+const THROTTLE_CONFIG = {
+    search: 300,      // ms per la ricerca
+    scroll: 100,      // ms per lo scroll
+    resize: 200,      // ms per il resize
+    update: 500       // ms per gli aggiornamenti UI
+};
+
+// Configurazione del sistema di backup
+const BACKUP_CONFIG = {
+    maxBackups: 5,
+    autoBackupInterval: 30 * 60 * 1000, // 30 minuti
+    backupStore: 'backups',
+    metadataStore: 'backup_metadata'
+};
+
+// Configurazione per la modifica dei dati
+const EDIT_CONFIG = {
+    autoSaveDelay: 2000, // 2 secondi
+    maxRetries: 3,
+    validationRules: {
+        nome: { required: true, minLength: 2 },
+        cognome: { required: true, minLength: 2 },
+        email: { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+        telefono: { pattern: /^\+?[\d\s-]{8,}$/ },
+        codiceFiscale: { pattern: /^[A-Z]{6}[\d]{2}[A-Z][\d]{2}[A-Z][\d]{3}[A-Z]$/ }
+    }
+};
+
+// Funzione per calcolare il delay del retry
+function calculateRetryDelay(attempt) {
+    const delay = Math.min(
+        RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffFactor, attempt),
+        RETRY_CONFIG.maxDelay
+    );
+    return delay + Math.random() * 1000; // Aggiunge jitter per evitare thundering herd
+}
+
+// Funzione per eseguire operazioni con retry
+async function executeWithRetry(operation, operationName) {
+    let lastError;
+    
+    for (let attempt = 0; attempt < RETRY_CONFIG.maxAttempts; attempt++) {
+        try {
+            return await operation();
+        } catch (error) {
+            lastError = error;
+            console.warn(`Tentativo ${attempt + 1}/${RETRY_CONFIG.maxAttempts} fallito per ${operationName}:`, error);
+            
+            if (attempt < RETRY_CONFIG.maxAttempts - 1) {
+                const delay = calculateRetryDelay(attempt);
+                console.log(`Riprovo tra ${Math.round(delay/1000)} secondi...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    throw new Error(`Operazione ${operationName} fallita dopo ${RETRY_CONFIG.maxAttempts} tentativi: ${lastError.message}`);
+}
+
 // Funzioni per la gestione della cache
 async function initCache() {
     try {
@@ -157,65 +225,181 @@ function getNotificationIcon(type) {
     }
 }
 
+// Funzione di throttling
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Funzione per ottimizzare il rendering
+function optimizeRendering() {
+    // Usa requestAnimationFrame per gli aggiornamenti UI
+    let pendingUpdate = false;
+    
+    return function(updateFunction) {
+        if (!pendingUpdate) {
+            pendingUpdate = true;
+            requestAnimationFrame(() => {
+                updateFunction();
+                pendingUpdate = false;
+            });
+        }
+    };
+}
+
+const scheduleUpdate = optimizeRendering();
+
+// Ottimizzazione della funzione handleSearchResults
+const throttledHandleSearchResults = throttle((results) => {
+    scheduleUpdate(() => {
+        const resultsContainer = document.getElementById('searchResults');
+        const resultsList = document.getElementById('resultsList');
+        
+        if (!results.length) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+
+        // Usa DocumentFragment per migliori performance
+        const fragment = document.createDocumentFragment();
+        results.forEach(result => {
+            const div = document.createElement('div');
+            div.className = 'p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer';
+            div.onclick = () => navigateToResult(result.path);
+            div.innerHTML = `
+                <div class="font-medium">${result.value}</div>
+                <div class="text-sm text-gray-600">
+                    ${Object.entries(result.context)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(' | ')}
+                </div>
+            `;
+            fragment.appendChild(div);
+        });
+
+        resultsList.innerHTML = '';
+        resultsList.appendChild(fragment);
+        resultsContainer.classList.remove('hidden');
+    });
+}, THROTTLE_CONFIG.search);
+
+// Ottimizzazione della funzione updateNavigationStyle
+const throttledUpdateNavigationStyle = throttle((sezioneCorrente) => {
+    scheduleUpdate(() => {
+        const navButtons = document.querySelectorAll('nav button');
+        navButtons.forEach(button => {
+            const sezione = button.getAttribute('data-sezione');
+            if (sezione === sezioneCorrente) {
+                button.classList.add('text-white', 'bg-primary');
+                button.classList.remove('text-gray-600');
+            } else {
+                button.classList.remove('text-white', 'bg-primary');
+                button.classList.add('text-gray-600');
+            }
+        });
+    });
+}, THROTTLE_CONFIG.update);
+
 // Funzione per sincronizzare i dati con Firebase
 function syncWithFirebase(esploratoreId) {
     const esploratoreRef = doc(db, "utenti", esploratoreId);
+    let retryCount = 0;
+    let pendingUpdate = false;
     
-    return onSnapshot(esploratoreRef, async (doc) => {
-        if (doc.exists()) {
-            const newData = doc.data();
-            const oldData = state.esploratoreData;
+    return onSnapshot(esploratoreRef, 
+        async (doc) => {
+            retryCount = 0;
+            if (doc.exists()) {
+                const newData = doc.data();
+                const oldData = state.esploratoreData;
+                
+                // Evita aggiornamenti non necessari
+                if (JSON.stringify(oldData) === JSON.stringify(newData)) {
+                    return;
+                }
+                
+                // Usa requestAnimationFrame per gli aggiornamenti UI
+                if (!pendingUpdate) {
+                    pendingUpdate = true;
+                    requestAnimationFrame(() => {
+                        updateState({
+                            esploratoreData: newData,
+                            lastUpdate: new Date()
+                        });
+                        
+                        // Salva i dati in cache
+                        saveToCache('esploratori', {
+                            id: esploratoreId,
+                            data: newData,
+                            timestamp: Date.now()
+                        });
+                        
+                        // Verifica se ci sono cambiamenti significativi
+                        if (oldData && hasSignificantChanges(oldData, newData)) {
+                            showNotification(
+                                'Aggiornamento Dati',
+                                'Sono stati rilevati aggiornamenti nei dati dell\'esploratore',
+                                NOTIFICATION_TYPES.UPDATE
+                            );
+                        }
+                        
+                        // Aggiorna la sezione corrente se presente
+                        if (state.currentSezione) {
+                            caricaSezione(state.currentSezione);
+                        }
+                        
+                        pendingUpdate = false;
+                    });
+                }
+            }
+        },
+        async (error) => {
+            console.error('Errore nella sincronizzazione:', error);
+            retryCount++;
             
-            updateState({
-                esploratoreData: newData,
-                lastUpdate: new Date()
-            });
-            
-            // Salva i dati in cache
-            await saveToCache('esploratori', {
-                id: esploratoreId,
-                data: newData,
-                timestamp: Date.now()
-            });
-            
-            // Verifica se ci sono cambiamenti significativi
-            if (oldData && hasSignificantChanges(oldData, newData)) {
+            if (retryCount <= RETRY_CONFIG.maxAttempts) {
+                const delay = calculateRetryDelay(retryCount - 1);
+                console.log(`Tentativo di riconnessione ${retryCount}/${RETRY_CONFIG.maxAttempts} tra ${Math.round(delay/1000)} secondi...`);
+                
                 showNotification(
-                    'Aggiornamento Dati',
-                    'Sono stati rilevati aggiornamenti nei dati dell\'esploratore',
-                    NOTIFICATION_TYPES.UPDATE
+                    'Riconnessione in corso',
+                    `Tentativo ${retryCount} di ${RETRY_CONFIG.maxAttempts}`,
+                    NOTIFICATION_TYPES.SYNC
+                );
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return syncWithFirebase(esploratoreId);
+            }
+            
+            updateState({ error });
+            
+            // In caso di errore, prova a recuperare i dati dalla cache
+            const cachedData = await getFromCache('esploratori', esploratoreId);
+            if (cachedData) {
+                updateState({
+                    esploratoreData: cachedData.data,
+                    lastUpdate: new Date(cachedData.timestamp)
+                });
+                showNotification(
+                    'Utilizzo Dati in Cache',
+                    'I dati sono stati recuperati dalla cache locale',
+                    NOTIFICATION_TYPES.CACHE
+                );
+            } else {
+                showNotification(
+                    'Errore di Sincronizzazione',
+                    'Impossibile recuperare i dati. Riprova più tardi.',
+                    NOTIFICATION_TYPES.ERROR
                 );
             }
-            
-            // Aggiorna la sezione corrente se presente
-            if (state.currentSezione) {
-                caricaSezione(state.currentSezione);
-            }
         }
-    }, async (error) => {
-        console.error('Errore nella sincronizzazione:', error);
-        updateState({ error });
-        
-        // In caso di errore, prova a recuperare i dati dalla cache
-        const cachedData = await getFromCache('esploratori', esploratoreId);
-        if (cachedData) {
-            updateState({
-                esploratoreData: cachedData.data,
-                lastUpdate: new Date(cachedData.timestamp)
-            });
-            showNotification(
-                'Utilizzo Dati in Cache',
-                'I dati sono stati recuperati dalla cache locale',
-                NOTIFICATION_TYPES.CACHE
-            );
-        } else {
-            showNotification(
-                'Errore di Sincronizzazione',
-                'Impossibile recuperare i dati. Riprova più tardi.',
-                NOTIFICATION_TYPES.ERROR
-            );
-        }
-    });
+    );
 }
 
 // Funzione per verificare cambiamenti significativi
@@ -250,8 +434,11 @@ async function initScheda() {
         showLoader();
         showLoadingIndicator();
         
-        // Inizializza la cache
-        await initCache();
+        // Inizializza la cache e il sistema di backup
+        await Promise.all([
+            initCache(),
+            initBackupSystem()
+        ]);
         
         // Verifica autenticazione
         const user = await checkAuth();
@@ -297,6 +484,18 @@ async function initScheda() {
         // Carica la prima sezione
         await caricaSezione('anagrafici');
         
+        // Aggiungi l'interfaccia dei backup
+        document.body.appendChild(createBackupInterface());
+        await updateBackupInterface();
+
+        // Imposta il backup automatico
+        setInterval(async () => {
+            if (state.esploratoreData) {
+                await createBackup(esploratoreId);
+                await updateBackupInterface();
+            }
+        }, BACKUP_CONFIG.autoBackupInterval);
+        
         updateState({ isLoading: false });
         hideLoader();
         hideLoadingIndicator();
@@ -314,16 +513,21 @@ async function initScheda() {
 async function loadEsploratoreData(esploratoreId) {
     try {
         console.log('Caricamento dati esploratore:', esploratoreId);
-        const esploratoreRef = doc(db, "utenti", esploratoreId);
-        const esploratoreDoc = await getDoc(esploratoreRef);
+        
+        const data = await executeWithRetry(
+            async () => {
+                const esploratoreRef = doc(db, "utenti", esploratoreId);
+                const esploratoreDoc = await getDoc(esploratoreRef);
+                
+                if (!esploratoreDoc.exists()) {
+                    throw new Error('Esploratore non trovato');
+                }
+                
+                return esploratoreDoc.data();
+            },
+            'caricamento dati esploratore'
+        );
 
-        if (!esploratoreDoc.exists()) {
-            showToast('Esploratore non trovato', 'error');
-            window.location.href = 'dashboard.html';
-            return;
-        }
-
-        const data = esploratoreDoc.data();
         console.log('Dati esploratore recuperati:', data);
         console.log('Struttura completa dei dati:', JSON.stringify(data, null, 2));
         
@@ -339,7 +543,11 @@ async function loadEsploratoreData(esploratoreId) {
         document.getElementById('emailLink').href = `mailto:${data.email}`;
 
         // Mostra i controlli staff se l'utente è staff approvato
-        const isApproved = await isStaffApproved();
+        const isApproved = await executeWithRetry(
+            () => isStaffApproved(),
+            'verifica permessi staff'
+        );
+        
         if (isApproved) {
             document.getElementById('staffControls').classList.remove('hidden');
         }
@@ -353,12 +561,26 @@ async function loadEsploratoreData(esploratoreId) {
             await loadSezioneData('anagrafici', data);
         } catch (error) {
             console.error('Errore nel caricamento della sezione anagrafici:', error);
-            showToast('Errore nel caricamento della sezione anagrafici', 'error');
+            showNotification(
+                'Errore nel caricamento della sezione anagrafici',
+                'Riprovo automaticamente...',
+                NOTIFICATION_TYPES.ERROR
+            );
+            
+            // Retry automatico per il caricamento della sezione
+            await executeWithRetry(
+                () => loadSezioneData('anagrafici', data),
+                'caricamento sezione anagrafici'
+            );
         }
 
     } catch (error) {
         console.error('Errore durante il caricamento dei dati:', error);
-        showToast('Errore durante il caricamento dei dati. Riprova più tardi.', 'error');
+        showNotification(
+            'Errore di Caricamento',
+            'Impossibile caricare i dati. Riprova più tardi.',
+            NOTIFICATION_TYPES.ERROR
+        );
         throw error;
     }
 }
@@ -375,8 +597,13 @@ function createAnagraficiSection() {
         <div class="flex-1">
             <h3 class="text-lg font-medium">Data di Nascita</h3>
             <p id="dataNascitaDisplay" class="text-gray-600">-</p>
+            <input type="date" id="dataNascitaEdit" class="hidden border rounded px-2 py-1">
         </div>
-        <input type="date" id="dataNascitaEdit" class="hidden border rounded px-2 py-1">
+        <button class="edit-btn text-primary hover:text-primary-dark" data-field="dataNascita">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+        </button>
     `;
     container.appendChild(dataNascitaGroup);
 
@@ -387,8 +614,13 @@ function createAnagraficiSection() {
         <div class="flex-1">
             <h3 class="text-lg font-medium">Codice Fiscale</h3>
             <p id="codiceFiscaleDisplay" class="text-gray-600">-</p>
+            <input type="text" id="codiceFiscaleEdit" class="hidden border rounded px-2 py-1">
         </div>
-        <input type="text" id="codiceFiscaleEdit" class="hidden border rounded px-2 py-1">
+        <button class="edit-btn text-primary hover:text-primary-dark" data-field="codiceFiscale">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+        </button>
     `;
     container.appendChild(codiceFiscaleGroup);
 
@@ -399,8 +631,13 @@ function createAnagraficiSection() {
         <div class="flex-1">
             <h3 class="text-lg font-medium">Indirizzo</h3>
             <p id="indirizzoDisplay" class="text-gray-600">-</p>
+            <input type="text" id="indirizzoEdit" class="hidden border rounded px-2 py-1">
         </div>
-        <input type="text" id="indirizzoEdit" class="hidden border rounded px-2 py-1">
+        <button class="edit-btn text-primary hover:text-primary-dark" data-field="indirizzo">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+        </button>
     `;
     container.appendChild(indirizzoGroup);
 
@@ -411,8 +648,13 @@ function createAnagraficiSection() {
         <div class="flex-1">
             <h3 class="text-lg font-medium">Telefono</h3>
             <p id="telefonoDisplay" class="text-gray-600">-</p>
+            <input type="tel" id="telefonoEdit" class="hidden border rounded px-2 py-1">
         </div>
-        <input type="tel" id="telefonoEdit" class="hidden border rounded px-2 py-1">
+        <button class="edit-btn text-primary hover:text-primary-dark" data-field="telefono">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+        </button>
     `;
     container.appendChild(telefonoGroup);
 
@@ -613,8 +855,17 @@ async function loadSezioneData(sezione, esploratore) {
 // Funzione per salvare i dati
 async function saveData(esploratoreId, data) {
     try {
-        const esploratoreRef = doc(db, "utenti", esploratoreId);
-        await updateDoc(esploratoreRef, data);
+        await executeWithRetry(
+            async () => {
+                const esploratoreRef = doc(db, "utenti", esploratoreId);
+                await updateDoc(esploratoreRef, data);
+            },
+            'salvataggio dati'
+        );
+        
+        // Crea un backup dopo il salvataggio
+        await createBackup(esploratoreId);
+        
         showNotification(
             'Salvataggio Completato',
             'I dati sono stati salvati con successo',
@@ -624,9 +875,10 @@ async function saveData(esploratoreId, data) {
         console.error('Errore durante il salvataggio dei dati:', error);
         showNotification(
             'Errore di Salvataggio',
-            'Si è verificato un errore durante il salvataggio dei dati',
+            'Impossibile salvare i dati. Riprova più tardi.',
             NOTIFICATION_TYPES.ERROR
         );
+        throw error;
     }
 }
 
@@ -839,7 +1091,7 @@ function createSearchInterface() {
         const filter = filterType.value;
         const filters = filter ? { [filter]: query } : {};
         const results = await searchData(query, filters);
-        handleSearchResults(results);
+        throttledHandleSearchResults(results);
     });
     
     filterType.addEventListener('change', async () => {
@@ -847,7 +1099,7 @@ function createSearchInterface() {
         const filter = filterType.value;
         const filters = filter ? { [filter]: query } : {};
         const results = await searchData(query, filters);
-        handleSearchResults(results);
+        throttledHandleSearchResults(results);
     });
     
     clearSearch.addEventListener('click', () => {
@@ -857,31 +1109,6 @@ function createSearchInterface() {
     });
 
     return searchContainer;
-}
-
-// Funzione per gestire i risultati della ricerca
-function handleSearchResults(results) {
-    const resultsContainer = document.getElementById('searchResults');
-    const resultsList = document.getElementById('resultsList');
-    
-    if (!results.length) {
-        resultsContainer.classList.add('hidden');
-        return;
-    }
-
-    resultsList.innerHTML = results.map(result => `
-        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-             onclick="navigateToResult('${result.path}')">
-            <div class="font-medium">${result.value}</div>
-            <div class="text-sm text-gray-600">
-                ${Object.entries(result.context)
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join(' | ')}
-            </div>
-        </div>
-    `).join('');
-
-    resultsContainer.classList.remove('hidden');
 }
 
 // Funzione per navigare al risultato
@@ -969,7 +1196,7 @@ window.caricaSezione = async function(sezione) {
         hideLoadingIndicator();
 
         // Aggiorna lo stile del menu di navigazione
-        updateNavigationStyle(sezione);
+        throttledUpdateNavigationStyle(sezione);
         
     } catch (error) {
         console.error('Errore nel caricamento della sezione:', error);
@@ -990,6 +1217,13 @@ async function populateSezione(sezione, data) {
         console.error('Dati mancanti per la sezione:', sezione);
         return;
     }
+
+    // Aggiungi gli event listener per la modifica
+    const editButtons = document.querySelectorAll('.edit-btn');
+    editButtons.forEach(btn => {
+        const fieldId = btn.dataset.field;
+        btn.addEventListener('click', () => enableEdit(fieldId));
+    });
 
     switch (sezione) {
         case 'anagrafici':
@@ -1062,19 +1296,459 @@ async function populateProgressione(data) {
     document.getElementById('cordaDisplay').textContent = datiProgressione.corda || '-';
 }
 
-// Funzione per aggiornare lo stile del menu di navigazione
-function updateNavigationStyle(sezioneCorrente) {
-    const navButtons = document.querySelectorAll('nav button');
-    navButtons.forEach(button => {
-        const sezione = button.getAttribute('data-sezione');
-        if (sezione === sezioneCorrente) {
-            button.classList.add('text-white', 'bg-primary');
-            button.classList.remove('text-gray-600');
-        } else {
-            button.classList.remove('text-white', 'bg-primary');
-            button.classList.add('text-gray-600');
+// Funzioni per la gestione dei backup
+async function initBackupSystem() {
+    try {
+        const db = await openDB();
+        if (!db.objectStoreNames.contains(BACKUP_CONFIG.backupStore)) {
+            db.createObjectStore(BACKUP_CONFIG.backupStore, { keyPath: 'timestamp' });
+        }
+        if (!db.objectStoreNames.contains(BACKUP_CONFIG.metadataStore)) {
+            db.createObjectStore(BACKUP_CONFIG.metadataStore, { keyPath: 'id' });
+        }
+        console.log('Sistema di backup inizializzato');
+        return true;
+    } catch (error) {
+        console.error('Errore nell\'inizializzazione del sistema di backup:', error);
+        return false;
+    }
+}
+
+async function createBackup(esploratoreId) {
+    try {
+        if (!state.esploratoreData) {
+            throw new Error('Nessun dato da salvare');
+        }
+
+        const timestamp = Date.now();
+        const backup = {
+            timestamp,
+            esploratoreId,
+            data: state.esploratoreData,
+            version: '1.0',
+            metadata: {
+                lastUpdate: state.lastUpdate,
+                currentSezione: state.currentSezione
+            }
+        };
+
+        // Salva il backup
+        await saveToCache(BACKUP_CONFIG.backupStore, backup);
+
+        // Aggiorna i metadati
+        const metadata = {
+            id: esploratoreId,
+            lastBackup: timestamp,
+            backupCount: await getBackupCount(esploratoreId) + 1
+        };
+        await saveToCache(BACKUP_CONFIG.metadataStore, metadata);
+
+        // Rimuovi i backup vecchi se necessario
+        await cleanupOldBackups(esploratoreId);
+
+        showNotification(
+            'Backup Completato',
+            'I dati sono stati salvati con successo',
+            NOTIFICATION_TYPES.SYNC
+        );
+
+        return backup;
+    } catch (error) {
+        console.error('Errore durante la creazione del backup:', error);
+        showNotification(
+            'Errore di Backup',
+            'Impossibile creare il backup dei dati',
+            NOTIFICATION_TYPES.ERROR
+        );
+        throw error;
+    }
+}
+
+async function getBackupCount(esploratoreId) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(BACKUP_CONFIG.backupStore, 'readonly');
+        const store = tx.objectStore(BACKUP_CONFIG.backupStore);
+        const backups = await store.getAll();
+        return backups.filter(b => b.esploratoreId === esploratoreId).length;
+    } catch (error) {
+        console.error('Errore nel conteggio dei backup:', error);
+        return 0;
+    }
+}
+
+async function cleanupOldBackups(esploratoreId) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(BACKUP_CONFIG.backupStore, 'readwrite');
+        const store = tx.objectStore(BACKUP_CONFIG.backupStore);
+        const backups = await store.getAll();
+        
+        // Filtra i backup per esploratore e ordina per timestamp
+        const explorerBackups = backups
+            .filter(b => b.esploratoreId === esploratoreId)
+            .sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Rimuovi i backup in eccesso
+        if (explorerBackups.length > BACKUP_CONFIG.maxBackups) {
+            const toDelete = explorerBackups.slice(BACKUP_CONFIG.maxBackups);
+            await Promise.all(toDelete.map(backup => store.delete(backup.timestamp)));
+            console.log(`Rimossi ${toDelete.length} backup vecchi`);
+        }
+    } catch (error) {
+        console.error('Errore nella pulizia dei backup vecchi:', error);
+    }
+}
+
+async function restoreFromBackup(timestamp) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(BACKUP_CONFIG.backupStore, 'readonly');
+        const store = tx.objectStore(BACKUP_CONFIG.backupStore);
+        const backup = await store.get(timestamp);
+
+        if (!backup) {
+            throw new Error('Backup non trovato');
+        }
+
+        // Aggiorna lo stato con i dati del backup
+        updateState({
+            esploratoreData: backup.data,
+            lastUpdate: new Date(backup.metadata.lastUpdate),
+            currentSezione: backup.metadata.currentSezione
+        });
+
+        // Aggiorna l'UI
+        if (backup.metadata.currentSezione) {
+            await caricaSezione(backup.metadata.currentSezione);
+        }
+
+        showNotification(
+            'Ripristino Completato',
+            'I dati sono stati ripristinati con successo',
+            NOTIFICATION_TYPES.SYNC
+        );
+
+        return backup;
+    } catch (error) {
+        console.error('Errore durante il ripristino del backup:', error);
+        showNotification(
+            'Errore di Ripristino',
+            'Impossibile ripristinare il backup',
+            NOTIFICATION_TYPES.ERROR
+        );
+        throw error;
+    }
+}
+
+// Funzione per creare l'interfaccia di gestione backup
+function createBackupInterface() {
+    const container = document.createElement('div');
+    container.className = 'backup-interface fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 w-96';
+    container.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Gestione Backup</h3>
+            <button id="closeBackupInterface" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Ultimo backup:</span>
+                <span id="lastBackupTime" class="text-sm font-medium">-</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Backup disponibili:</span>
+                <span id="backupCount" class="text-sm font-medium">-</span>
+            </div>
+            <div class="space-y-2">
+                <button id="createBackupBtn" class="w-full bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark transition-colors">
+                    Crea Backup
+                </button>
+                <button id="showBackupsBtn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300 transition-colors">
+                    Visualizza Backup
+                </button>
+            </div>
+        </div>
+        <div id="backupList" class="mt-4 hidden">
+            <h4 class="text-sm font-medium mb-2">Lista Backup</h4>
+            <div id="backupListContent" class="space-y-2 max-h-60 overflow-y-auto"></div>
+        </div>
+    `;
+
+    // Aggiungi gli event listener
+    const closeBtn = container.querySelector('#closeBackupInterface');
+    const createBackupBtn = container.querySelector('#createBackupBtn');
+    const showBackupsBtn = container.querySelector('#showBackupsBtn');
+    const backupList = container.querySelector('#backupList');
+
+    closeBtn.addEventListener('click', () => {
+        container.remove();
+    });
+
+    createBackupBtn.addEventListener('click', async () => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const esploratoreId = urlParams.get('id');
+            await createBackup(esploratoreId);
+            await updateBackupInterface();
+        } catch (error) {
+            console.error('Errore durante la creazione del backup:', error);
         }
     });
+
+    showBackupsBtn.addEventListener('click', async () => {
+        backupList.classList.toggle('hidden');
+        if (!backupList.classList.contains('hidden')) {
+            await updateBackupList();
+        }
+    });
+
+    return container;
+}
+
+// Funzione per aggiornare l'interfaccia dei backup
+async function updateBackupInterface() {
+    const lastBackupTime = document.getElementById('lastBackupTime');
+    const backupCount = document.getElementById('backupCount');
+    
+    if (!lastBackupTime || !backupCount) return;
+
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const esploratoreId = urlParams.get('id');
+        
+        const db = await openDB();
+        const tx = db.transaction(BACKUP_CONFIG.metadataStore, 'readonly');
+        const store = tx.objectStore(BACKUP_CONFIG.metadataStore);
+        const metadata = await store.get(esploratoreId);
+
+        if (metadata) {
+            lastBackupTime.textContent = new Date(metadata.lastBackup).toLocaleString('it-IT');
+            backupCount.textContent = metadata.backupCount;
+        } else {
+            lastBackupTime.textContent = 'Nessun backup';
+            backupCount.textContent = '0';
+        }
+    } catch (error) {
+        console.error('Errore nell\'aggiornamento dell\'interfaccia backup:', error);
+    }
+}
+
+// Funzione per aggiornare la lista dei backup
+async function updateBackupList() {
+    const backupListContent = document.getElementById('backupListContent');
+    if (!backupListContent) return;
+
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const esploratoreId = urlParams.get('id');
+        
+        const db = await openDB();
+        const tx = db.transaction(BACKUP_CONFIG.backupStore, 'readonly');
+        const store = tx.objectStore(BACKUP_CONFIG.backupStore);
+        const backups = await store.getAll();
+        
+        const explorerBackups = backups
+            .filter(b => b.esploratoreId === esploratoreId)
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        backupListContent.innerHTML = explorerBackups.map(backup => `
+            <div class="backup-item bg-gray-50 p-3 rounded flex justify-between items-center">
+                <div class="text-sm">
+                    <div class="font-medium">${new Date(backup.timestamp).toLocaleString('it-IT')}</div>
+                    <div class="text-gray-500">Versione: ${backup.version}</div>
+                </div>
+                <button class="restore-backup-btn bg-primary text-white px-3 py-1 rounded text-sm hover:bg-primary-dark transition-colors"
+                        data-timestamp="${backup.timestamp}">
+                    Ripristina
+                </button>
+            </div>
+        `).join('');
+
+        // Aggiungi gli event listener per i pulsanti di ripristino
+        backupListContent.querySelectorAll('.restore-backup-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const timestamp = parseInt(btn.dataset.timestamp);
+                try {
+                    await restoreFromBackup(timestamp);
+                    showNotification(
+                        'Ripristino Completato',
+                        'I dati sono stati ripristinati con successo',
+                        NOTIFICATION_TYPES.SYNC
+                    );
+                } catch (error) {
+                    console.error('Errore durante il ripristino:', error);
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Errore nell\'aggiornamento della lista backup:', error);
+    }
+}
+
+// Funzione per abilitare la modifica di un campo
+function enableEdit(fieldId) {
+    const displayElement = document.getElementById(`${fieldId}Display`);
+    const editElement = document.getElementById(`${fieldId}Edit`);
+    
+    if (!displayElement || !editElement) return;
+    
+    displayElement.classList.add('hidden');
+    editElement.classList.remove('hidden');
+    editElement.focus();
+    
+    // Aggiungi pulsanti di conferma/annullamento
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'flex gap-2 mt-2';
+    buttonContainer.innerHTML = `
+        <button class="save-btn bg-primary text-white px-3 py-1 rounded text-sm hover:bg-primary-dark transition-colors">
+            Salva
+        </button>
+        <button class="cancel-btn bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300 transition-colors">
+            Annulla
+        </button>
+    `;
+    
+    editElement.parentNode.appendChild(buttonContainer);
+    
+    // Gestisci il salvataggio
+    const saveBtn = buttonContainer.querySelector('.save-btn');
+    saveBtn.addEventListener('click', async () => {
+        try {
+            const newValue = editElement.value;
+            if (await validateField(fieldId, newValue)) {
+                await saveField(fieldId, newValue);
+                displayElement.textContent = formatFieldValue(fieldId, newValue);
+                disableEdit(fieldId);
+            }
+        } catch (error) {
+            console.error('Errore durante il salvataggio:', error);
+            showNotification(
+                'Errore di Salvataggio',
+                'Impossibile salvare le modifiche',
+                NOTIFICATION_TYPES.ERROR
+            );
+        }
+    });
+    
+    // Gestisci l'annullamento
+    const cancelBtn = buttonContainer.querySelector('.cancel-btn');
+    cancelBtn.addEventListener('click', () => {
+        editElement.value = displayElement.textContent;
+        disableEdit(fieldId);
+    });
+}
+
+// Funzione per disabilitare la modifica di un campo
+function disableEdit(fieldId) {
+    const displayElement = document.getElementById(`${fieldId}Display`);
+    const editElement = document.getElementById(`${fieldId}Edit`);
+    
+    if (!displayElement || !editElement) return;
+    
+    displayElement.classList.remove('hidden');
+    editElement.classList.add('hidden');
+    
+    // Rimuovi i pulsanti
+    const buttonContainer = editElement.parentNode.querySelector('.flex.gap-2');
+    if (buttonContainer) {
+        buttonContainer.remove();
+    }
+}
+
+// Funzione per validare un campo
+async function validateField(fieldId, value) {
+    const rules = EDIT_CONFIG.validationRules[fieldId];
+    if (!rules) return true;
+    
+    if (rules.required && !value) {
+        showNotification(
+            'Campo Obbligatorio',
+            `Il campo ${fieldId} è obbligatorio`,
+            NOTIFICATION_TYPES.ERROR
+        );
+        return false;
+    }
+    
+    if (rules.minLength && value.length < rules.minLength) {
+        showNotification(
+            'Lunghezza Minima',
+            `Il campo ${fieldId} deve contenere almeno ${rules.minLength} caratteri`,
+            NOTIFICATION_TYPES.ERROR
+        );
+        return false;
+    }
+    
+    if (rules.pattern && !rules.pattern.test(value)) {
+        showNotification(
+            'Formato Non Valido',
+            `Il formato del campo ${fieldId} non è valido`,
+            NOTIFICATION_TYPES.ERROR
+        );
+        return false;
+    }
+    
+    return true;
+}
+
+// Funzione per formattare il valore di un campo
+function formatFieldValue(fieldId, value) {
+    if (!value) return '-';
+    
+    switch (fieldId) {
+        case 'dataNascita':
+            return new Date(value).toLocaleDateString('it-IT');
+        case 'telefono':
+            return value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+        default:
+            return value;
+    }
+}
+
+// Funzione per salvare un campo
+async function saveField(fieldId, value) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const esploratoreId = urlParams.get('id');
+    
+    if (!esploratoreId) {
+        throw new Error('ID esploratore non trovato');
+    }
+    
+    // Determina il percorso del campo nei dati
+    const [sezione, campo] = fieldId.split(/(?=[A-Z])/).map(s => s.toLowerCase());
+    const updatePath = `datiScheda.${sezione}.${campo}`;
+    
+    // Prepara l'oggetto di aggiornamento
+    const updateData = {
+        [updatePath]: value,
+        lastUpdate: new Date().toISOString()
+    };
+    
+    // Salva i dati
+    await saveData(esploratoreId, updateData);
+    
+    // Aggiorna lo stato locale
+    const newData = { ...state.esploratoreData };
+    setNestedValue(newData, updatePath, value);
+    updateState({ esploratoreData: newData });
+}
+
+// Funzione di utilità per impostare un valore annidato
+function setNestedValue(obj, path, value) {
+    const keys = path.split('.');
+    let current = obj;
+    
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) {
+            current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+    }
+    
+    current[keys[keys.length - 1]] = value;
 }
 
 // Inizializza la scheda quando il documento è pronto
