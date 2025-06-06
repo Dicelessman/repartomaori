@@ -1217,157 +1217,180 @@
             setChecked('moduloPrivacy4CheckEdit', moduloPrivacy?.[4]?.presente);
         }
 
+        // Funzione di utilità per ottenere il valore di un campo in modo sicuro
+        function getFieldValue(fieldId) {
+            const element = document.getElementById(fieldId);
+            if (!element) return null;
+            return element.type === 'checkbox' ? element.checked : element.value;
+        }
+
         // Funzione per salvare i dati
         async function saveData(userId) {
             try {
+                // Raccogli i dati solo dai campi che esistono
                 const userData = {
                     datiScheda: {
                         anagrafici: {
-                            dataNascita: document.getElementById('dataNascitaEdit').value,
-                            codiceFiscale: document.getElementById('codiceFiscaleEdit').value,
-                            indirizzo: document.getElementById('indirizzoEdit').value,
-                            telefono: document.getElementById('telefonoEdit').value
+                            dataNascita: getFieldValue('dataNascitaEdit'),
+                            codiceFiscale: getFieldValue('codiceFiscaleEdit'),
+                            indirizzo: getFieldValue('indirizzoEdit'),
+                            telefono: getFieldValue('telefonoEdit')
                         },
                         contatti: {
                             genitore1: {
-                                nome: document.getElementById('genitore1NomeEdit').value,
-                                email: document.getElementById('genitore1EmailEdit').value,
-                                numero: document.getElementById('genitore1NumeroEdit').value
+                                nome: getFieldValue('genitore1NomeEdit'),
+                                email: getFieldValue('genitore1EmailEdit'),
+                                numero: getFieldValue('genitore1NumeroEdit')
                             },
                             genitore2: {
-                                nome: document.getElementById('genitore2NomeEdit').value,
-                                email: document.getElementById('genitore2EmailEdit').value,
-                                numero: document.getElementById('genitore2NumeroEdit').value
+                                nome: getFieldValue('genitore2NomeEdit'),
+                                email: getFieldValue('genitore2EmailEdit'),
+                                numero: getFieldValue('genitore2NumeroEdit')
                             }
                         },
                         sanitarie: {
-                            gruppoSanguigno: document.getElementById('gruppoSanguignoEdit').value,
-                            intolleranze: document.getElementById('intolleranzeEdit').value,
-                            allergie: document.getElementById('allergieEdit').value,
-                            farmaci: document.getElementById('farmaciEdit').value
+                            gruppoSanguigno: getFieldValue('gruppoSanguignoEdit'),
+                            intolleranze: getFieldValue('intolleranzeEdit'),
+                            allergie: getFieldValue('allergieEdit'),
+                            farmaci: getFieldValue('farmaciEdit')
                         },
                         progressione: {
-                            promessa: document.getElementById('promessaEdit').value,
+                            promessa: getFieldValue('promessaEdit'),
                             primaTraccia: {
-                                data: document.getElementById('primaTracciaDataEdit').value,
-                                sfida: document.getElementById('primaTracciaSfidaEdit').value
+                                data: getFieldValue('primaTracciaDataEdit'),
+                                sfida: getFieldValue('primaTracciaSfidaEdit')
                             },
                             secondaTraccia: {
-                                data: document.getElementById('secondaTracciaDataEdit').value,
-                                sfida: document.getElementById('secondaTracciaSfidaEdit').value
+                                data: getFieldValue('secondaTracciaDataEdit'),
+                                sfida: getFieldValue('secondaTracciaSfidaEdit')
                             },
                             terzaTraccia: {
-                                data: document.getElementById('terzaTracciaDataEdit').value,
-                                sfida: document.getElementById('terzaTracciaSfidaEdit').value
+                                data: getFieldValue('terzaTracciaDataEdit'),
+                                sfida: getFieldValue('terzaTracciaSfidaEdit')
                             }
                         },
                         eventi: {
                             campiEstivi: {
                                 1: {
-                                    luogo: document.getElementById('campoEstivo1LuogoEdit').value,
-                                    anno: document.getElementById('campoEstivo1AnnoEdit').value
+                                    luogo: getFieldValue('campoEstivo1LuogoEdit'),
+                                    anno: getFieldValue('campoEstivo1AnnoEdit')
                                 },
                                 2: {
-                                    luogo: document.getElementById('campoEstivo2LuogoEdit').value,
-                                    anno: document.getElementById('campoEstivo2AnnoEdit').value
+                                    luogo: getFieldValue('campoEstivo2LuogoEdit'),
+                                    anno: getFieldValue('campoEstivo2AnnoEdit')
                                 },
                                 3: {
-                                    luogo: document.getElementById('campoEstivo3LuogoEdit').value,
-                                    anno: document.getElementById('campoEstivo3AnnoEdit').value
+                                    luogo: getFieldValue('campoEstivo3LuogoEdit'),
+                                    anno: getFieldValue('campoEstivo3AnnoEdit')
                                 },
                                 4: {
-                                    luogo: document.getElementById('campoEstivo4LuogoEdit').value,
-                                    anno: document.getElementById('campoEstivo4AnnoEdit').value
+                                    luogo: getFieldValue('campoEstivo4LuogoEdit'),
+                                    anno: getFieldValue('campoEstivo4AnnoEdit')
                                 }
                             },
                             tecnicamp: {
                                 1: {
-                                    luogo: document.getElementById('tecnicamp1LuogoEdit').value,
-                                    corso: document.getElementById('tecnicamp1CorsoEdit').value,
-                                    anno: document.getElementById('tecnicamp1AnnoEdit').value
+                                    luogo: getFieldValue('tecnicamp1LuogoEdit'),
+                                    corso: getFieldValue('tecnicamp1CorsoEdit'),
+                                    anno: getFieldValue('tecnicamp1AnnoEdit')
                                 },
                                 2: {
-                                    luogo: document.getElementById('tecnicamp2LuogoEdit').value,
-                                    corso: document.getElementById('tecnicamp2CorsoEdit').value,
-                                    anno: document.getElementById('tecnicamp2AnnoEdit').value
+                                    luogo: getFieldValue('tecnicamp2LuogoEdit'),
+                                    corso: getFieldValue('tecnicamp2CorsoEdit'),
+                                    anno: getFieldValue('tecnicamp2AnnoEdit')
                                 },
                                 3: {
-                                    luogo: document.getElementById('tecnicamp3LuogoEdit').value,
-                                    corso: document.getElementById('tecnicamp3CorsoEdit').value,
-                                    anno: document.getElementById('tecnicamp3AnnoEdit').value
+                                    luogo: getFieldValue('tecnicamp3LuogoEdit'),
+                                    corso: getFieldValue('tecnicamp3CorsoEdit'),
+                                    anno: getFieldValue('tecnicamp3AnnoEdit')
                                 },
                                 4: {
-                                    luogo: document.getElementById('tecnicamp4LuogoEdit').value,
-                                    corso: document.getElementById('tecnicamp4CorsoEdit').value,
-                                    anno: document.getElementById('tecnicamp4AnnoEdit').value
+                                    luogo: getFieldValue('tecnicamp4LuogoEdit'),
+                                    corso: getFieldValue('tecnicamp4CorsoEdit'),
+                                    anno: getFieldValue('tecnicamp4AnnoEdit')
                                 }
                             },
                             jamboree: {
-                                luogo: document.getElementById('jamboreeLuogoEdit').value,
-                                anno: document.getElementById('jamboreeAnnoEdit').value
+                                luogo: getFieldValue('jamboreeLuogoEdit'),
+                                anno: getFieldValue('jamboreeAnnoEdit')
                             }
                         },
                         documenti: {
                             quotaAnnuale: {
                                 1: {
-                                    data: document.getElementById('quotaAnnuale1DataEdit').value,
-                                    pagata: document.getElementById('quotaAnnuale1CheckEdit').checked
+                                    data: getFieldValue('quotaAnnuale1DataEdit'),
+                                    pagata: getFieldValue('quotaAnnuale1CheckEdit')
                                 },
                                 2: {
-                                    data: document.getElementById('quotaAnnuale2DataEdit').value,
-                                    pagata: document.getElementById('quotaAnnuale2CheckEdit').checked
+                                    data: getFieldValue('quotaAnnuale2DataEdit'),
+                                    pagata: getFieldValue('quotaAnnuale2CheckEdit')
                                 },
                                 3: {
-                                    data: document.getElementById('quotaAnnuale3DataEdit').value,
-                                    pagata: document.getElementById('quotaAnnuale3CheckEdit').checked
+                                    data: getFieldValue('quotaAnnuale3DataEdit'),
+                                    pagata: getFieldValue('quotaAnnuale3CheckEdit')
                                 },
                                 4: {
-                                    data: document.getElementById('quotaAnnuale4DataEdit').value,
-                                    pagata: document.getElementById('quotaAnnuale4CheckEdit').checked
+                                    data: getFieldValue('quotaAnnuale4DataEdit'),
+                                    pagata: getFieldValue('quotaAnnuale4CheckEdit')
                                 }
                             },
                             moduloIscrizione: {
-                                presente: document.getElementById('moduloIscrizioneCheckEdit').checked
+                                presente: getFieldValue('moduloIscrizioneCheckEdit')
                             },
                             moduloSanitario: {
                                 1: {
-                                    data: document.getElementById('moduloSanitario1DataEdit').value,
-                                    presente: document.getElementById('moduloSanitario1CheckEdit').checked
+                                    data: getFieldValue('moduloSanitario1DataEdit'),
+                                    presente: getFieldValue('moduloSanitario1CheckEdit')
                                 },
                                 2: {
-                                    data: document.getElementById('moduloSanitario2DataEdit').value,
-                                    presente: document.getElementById('moduloSanitario2CheckEdit').checked
+                                    data: getFieldValue('moduloSanitario2DataEdit'),
+                                    presente: getFieldValue('moduloSanitario2CheckEdit')
                                 },
                                 3: {
-                                    data: document.getElementById('moduloSanitario3DataEdit').value,
-                                    presente: document.getElementById('moduloSanitario3CheckEdit').checked
+                                    data: getFieldValue('moduloSanitario3DataEdit'),
+                                    presente: getFieldValue('moduloSanitario3CheckEdit')
                                 },
                                 4: {
-                                    data: document.getElementById('moduloSanitario4DataEdit').value,
-                                    presente: document.getElementById('moduloSanitario4CheckEdit').checked
+                                    data: getFieldValue('moduloSanitario4DataEdit'),
+                                    presente: getFieldValue('moduloSanitario4CheckEdit')
                                 }
                             },
                             moduloPrivacy: {
                                 1: {
-                                    data: document.getElementById('moduloPrivacy1DataEdit').value,
-                                    presente: document.getElementById('moduloPrivacy1CheckEdit').checked
+                                    data: getFieldValue('moduloPrivacy1DataEdit'),
+                                    presente: getFieldValue('moduloPrivacy1CheckEdit')
                                 },
                                 2: {
-                                    data: document.getElementById('moduloPrivacy2DataEdit').value,
-                                    presente: document.getElementById('moduloPrivacy2CheckEdit').checked
+                                    data: getFieldValue('moduloPrivacy2DataEdit'),
+                                    presente: getFieldValue('moduloPrivacy2CheckEdit')
                                 },
                                 3: {
-                                    data: document.getElementById('moduloPrivacy3DataEdit').value,
-                                    presente: document.getElementById('moduloPrivacy3CheckEdit').checked
+                                    data: getFieldValue('moduloPrivacy3DataEdit'),
+                                    presente: getFieldValue('moduloPrivacy3CheckEdit')
                                 },
                                 4: {
-                                    data: document.getElementById('moduloPrivacy4DataEdit').value,
-                                    presente: document.getElementById('moduloPrivacy4CheckEdit').checked
+                                    data: getFieldValue('moduloPrivacy4DataEdit'),
+                                    presente: getFieldValue('moduloPrivacy4CheckEdit')
                                 }
                             }
                         }
                     }
                 };
+
+                // Rimuovi i campi nulli
+                function removeNullValues(obj) {
+                    Object.keys(obj).forEach(key => {
+                        if (obj[key] === null) {
+                            delete obj[key];
+                        } else if (typeof obj[key] === 'object') {
+                            removeNullValues(obj[key]);
+                            if (Object.keys(obj[key]).length === 0) {
+                                delete obj[key];
+                            }
+                        }
+                    });
+                }
+                removeNullValues(userData);
 
                 // Validazione dei campi
                 for (const [field, value] of Object.entries(userData.datiScheda.anagrafici)) {
