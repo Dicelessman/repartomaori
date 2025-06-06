@@ -370,32 +370,94 @@ window.caricaSezione = async function(sezione) {
         // Aspetta che il DOM sia aggiornato
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Popola i campi
-        await loadSezioneData(sezione, esploratoreData);
-        
-        // Forza un aggiornamento visivo dei dati
-        if (sezione === 'anagrafici') {
-            const datiAnagrafici = esploratoreData.datiScheda?.anagrafici || {};
-            
-            // Aggiorna tutti i campi display
-            const dataNascitaDisplay = document.getElementById('dataNascitaDisplay');
-            const codiceFiscaleDisplay = document.getElementById('codiceFiscaleDisplay');
-            const indirizzoDisplay = document.getElementById('indirizzoDisplay');
-            const telefonoDisplay = document.getElementById('telefonoDisplay');
-            
-            if (dataNascitaDisplay) {
-                const dataNascita = datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
-                dataNascitaDisplay.textContent = dataNascita;
-            }
-            if (codiceFiscaleDisplay) {
-                codiceFiscaleDisplay.textContent = datiAnagrafici.codiceFiscale || '-';
-            }
-            if (indirizzoDisplay) {
-                indirizzoDisplay.textContent = datiAnagrafici.indirizzo || '-';
-            }
-            if (telefonoDisplay) {
-                telefonoDisplay.textContent = datiAnagrafici.telefono || '-';
-            }
+        // Popola i campi in base alla sezione
+        switch (sezione) {
+            case 'anagrafici':
+                const datiAnagrafici = esploratoreData.datiScheda?.anagrafici || {};
+                const dataNascitaDisplay = document.getElementById('dataNascitaDisplay');
+                const codiceFiscaleDisplay = document.getElementById('codiceFiscaleDisplay');
+                const indirizzoDisplay = document.getElementById('indirizzoDisplay');
+                const telefonoDisplay = document.getElementById('telefonoDisplay');
+                
+                if (dataNascitaDisplay) {
+                    const dataNascita = datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
+                    dataNascitaDisplay.textContent = dataNascita;
+                }
+                if (codiceFiscaleDisplay) {
+                    codiceFiscaleDisplay.textContent = datiAnagrafici.codiceFiscale || '-';
+                }
+                if (indirizzoDisplay) {
+                    indirizzoDisplay.textContent = datiAnagrafici.indirizzo || '-';
+                }
+                if (telefonoDisplay) {
+                    telefonoDisplay.textContent = datiAnagrafici.telefono || '-';
+                }
+                break;
+
+            case 'contatti':
+                const datiContatti = esploratoreData.datiScheda?.contatti || {};
+                const genitore1Display = document.getElementById('genitore1Display');
+                const genitore2Display = document.getElementById('genitore2Display');
+                
+                if (genitore1Display && datiContatti.genitore1) {
+                    const gen1 = datiContatti.genitore1;
+                    genitore1Display.innerHTML = `
+                        <div>${gen1.nome || '-'}</div>
+                        <div>${gen1.email || '-'}</div>
+                        <div>${gen1.numero || '-'}</div>
+                    `;
+                }
+                if (genitore2Display && datiContatti.genitore2) {
+                    const gen2 = datiContatti.genitore2;
+                    genitore2Display.innerHTML = `
+                        <div>${gen2.nome || '-'}</div>
+                        <div>${gen2.email || '-'}</div>
+                        <div>${gen2.numero || '-'}</div>
+                    `;
+                }
+                break;
+
+            case 'sanitarie':
+                const datiSanitari = esploratoreData.datiScheda?.sanitarie || {};
+                const gruppoSanguignoDisplay = document.getElementById('gruppoSanguignoDisplay');
+                const intolleranzeDisplay = document.getElementById('intolleranzeDisplay');
+                const allergieDisplay = document.getElementById('allergieDisplay');
+                const farmaciDisplay = document.getElementById('farmaciDisplay');
+                
+                if (gruppoSanguignoDisplay) {
+                    gruppoSanguignoDisplay.textContent = datiSanitari.gruppoSanguigno || '-';
+                }
+                if (intolleranzeDisplay) {
+                    intolleranzeDisplay.textContent = datiSanitari.intolleranze || '-';
+                }
+                if (allergieDisplay) {
+                    allergieDisplay.textContent = datiSanitari.allergie || '-';
+                }
+                if (farmaciDisplay) {
+                    farmaciDisplay.textContent = datiSanitari.farmaci || '-';
+                }
+                break;
+
+            case 'progressione':
+                const datiProgressione = esploratoreData.datiScheda?.progressione || {};
+                const promessaDisplay = document.getElementById('promessaDisplay');
+                const brevettoDisplay = document.getElementById('brevettoDisplay');
+                const specialitaDisplay = document.getElementById('specialitaDisplay');
+                const cordaDisplay = document.getElementById('cordaDisplay');
+                
+                if (promessaDisplay) {
+                    promessaDisplay.textContent = datiProgressione.promessa || '-';
+                }
+                if (brevettoDisplay) {
+                    brevettoDisplay.textContent = datiProgressione.brevetto || '-';
+                }
+                if (specialitaDisplay) {
+                    specialitaDisplay.textContent = datiProgressione.specialita || '-';
+                }
+                if (cordaDisplay) {
+                    cordaDisplay.textContent = datiProgressione.corda || '-';
+                }
+                break;
         }
         
         currentSezione = sezione;
