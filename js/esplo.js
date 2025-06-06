@@ -1738,5 +1738,22 @@ function setNestedValue(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
+// Funzioni per la gestione della cache
+async function initCache() {
+    try {
+        const db = await openDB();
+        console.log('Cache inizializzata con successo');
+        return db;
+    } catch (error) {
+        console.error('Errore nell\'inizializzazione della cache:', error);
+        throw error;
+    }
+}
+
+// Funzione per ottenere l'icona
+function getNotificationIcon(type) {
+    return ICON_CONFIG[type] || ICON_CONFIG.update;
+}
+
 // Inizializza la scheda quando il documento è pronto
 document.addEventListener('DOMContentLoaded', initScheda); 
