@@ -977,11 +977,15 @@ window.navigateToResult = function(path) {
 const originalCaricaSezione = window.caricaSezione;
 window.caricaSezione = async function(sezione) {
     try {
+        console.log('Caricamento sezione:', sezione);
         updateState({ isLoading: true });
         showLoader();
         showLoadingIndicator();
         
         const container = document.getElementById('sezioneContent');
+        if (!container) {
+            throw new Error('Container sezione non trovato');
+        }
         
         // Aggiungi l'interfaccia di ricerca se non esiste
         if (!document.querySelector('.search-container')) {
@@ -1001,6 +1005,7 @@ window.caricaSezione = async function(sezione) {
 
         // Carica la sezione corrente
         if (!state.sezioniContent[sezione]) {
+            console.log('Caricamento contenuto sezione:', sezione);
             const content = await loadSezioneContent(sezione);
             updateState({
                 sezioniContent: {
@@ -1019,6 +1024,7 @@ window.caricaSezione = async function(sezione) {
         }
         
         // Popola i campi della sezione corrente
+        console.log('Popolamento dati per sezione:', sezione);
         await populateSezione(sezione, state.esploratoreData);
         
         // Fade in della nuova sezione
@@ -1056,8 +1062,10 @@ window.caricaSezione = async function(sezione) {
 
 // Funzione per popolare una sezione
 async function populateSezione(sezione, data) {
-    if (!data) {
-        console.error('Dati mancanti per la sezione:', sezione);
+    console.log('Popolamento sezione:', sezione, 'con dati:', data);
+    
+    if (!data || !data.datiScheda) {
+        console.error('Dati mancanti o incompleti per la sezione:', sezione);
         return;
     }
 
@@ -1065,78 +1073,142 @@ async function populateSezione(sezione, data) {
     const editButtons = document.querySelectorAll('.edit-btn');
     editButtons.forEach(btn => {
         const fieldId = btn.dataset.field;
-        btn.addEventListener('click', () => enableEdit(fieldId));
+        if (fieldId) {
+            btn.addEventListener('click', () => {
+                console.log('Click su pulsante modifica per il campo:', fieldId);
+                enableEdit(fieldId);
+            });
+        }
     });
 
-    switch (sezione) {
-        case 'anagrafici':
-            await populateAnagrafici(data);
-            break;
-        case 'contatti':
-            await populateContatti(data);
-            break;
-        case 'sanitarie':
-            await populateSanitarie(data);
-            break;
-        case 'progressione':
-            await populateProgressione(data);
-            break;
+    try {
+        switch (sezione) {
+            case 'anagrafici':
+                await populateAnagrafici(data);
+                break;
+            case 'contatti':
+                await populateContatti(data);
+                break;
+            case 'sanitarie':
+                await populateSanitarie(data);
+                break;
+            case 'progressione':
+                await populateProgressione(data);
+                break;
+            default:
+                console.warn('Sezione non riconosciuta:', sezione);
+        }
+    } catch (error) {
+        console.error('Errore nel popolamento della sezione:', sezione, error);
+        showNotification(
+            'Errore di Caricamento',
+            `Impossibile caricare i dati della sezione ${sezione}`,
+            NOTIFICATION_TYPES.ERROR
+        );
     }
 }
 
 // Funzione per popolare la sezione anagrafici
 async function populateAnagrafici(data) {
+    console.log('Popolamento dati anagrafici:', data);
     const datiAnagrafici = data.datiScheda?.anagrafici || {};
     
     // Aggiorna i campi con i dati
-    document.getElementById('dataNascitaDisplay').textContent = 
-        datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-';
-    document.getElementById('codiceFiscaleDisplay').textContent = datiAnagrafici.codiceFiscale || '-';
-    document.getElementById('indirizzoDisplay').textContent = datiAnagrafici.indirizzo || '-';
-    document.getElementById('telefonoDisplay').textContent = datiAnagrafici.telefono || '-';
+    const fields = {
+        dataNascita: datiAnagrafici.dataNascita ? new Date(datiAnagrafici.dataNascita).toLocaleDateString('it-IT') : '-',
+        codiceFiscale: datiAnagrafici.codiceFiscale || '-',
+        indirizzo: datiAnagrafici.indirizzo || '-',
+        telefono: datiAnagrafici.telefono || '-'
+    };
+
+    Object.entries(fields).forEach(([field, value]) => {
+        const displayElement = document.getElementById(`${field}Display`);
+        const editElement = document.getElementById(`${field}Edit`);
+        
+        if (displayElement) {
+            displayElement.textContent = value;
+            console.log(`Aggiornato ${field} display:`, value);
+        }
+        
+        if (editElement) {
+            editElement.value = value === '-' ? '' : value;
+            console.log(`Aggiornato ${field} edit:`, value);
+        }
+    });
 }
 
 // Funzione per popolare la sezione contatti
 async function populateContatti(data) {
+    console.log('Popolamento dati contatti:', data);
     const datiContatti = data.datiScheda?.contatti || {};
     
     if (datiContatti.genitore1) {
         const gen1 = datiContatti.genitore1;
-        document.getElementById('genitore1Display').innerHTML = `
-            <div>${gen1.nome || '-'}</div>
-            <div>${gen1.email || '-'}</div>
-            <div>${gen1.numero || '-'}</div>
-        `;
+        const genitore1Display = document.getElementById('genitore1Display');
+        if (genitore1Display) {
+            genitore1Display.innerHTML = `
+                <div>${gen1.nome || '-'}</div>
+                <div>${gen1.email || '-'}</div>
+                <div>${gen1.numero || '-'}</div>
+            `;
+            console.log('Aggiornato genitore 1:', gen1);
+        }
     }
 
     if (datiContatti.genitore2) {
         const gen2 = datiContatti.genitore2;
-        document.getElementById('genitore2Display').innerHTML = `
-            <div>${gen2.nome || '-'}</div>
-            <div>${gen2.email || '-'}</div>
-            <div>${gen2.numero || '-'}</div>
-        `;
+        const genitore2Display = document.getElementById('genitore2Display');
+        if (genitore2Display) {
+            genitore2Display.innerHTML = `
+                <div>${gen2.nome || '-'}</div>
+                <div>${gen2.email || '-'}</div>
+                <div>${gen2.numero || '-'}</div>
+            `;
+            console.log('Aggiornato genitore 2:', gen2);
+        }
     }
 }
 
 // Funzione per popolare la sezione sanitarie
 async function populateSanitarie(data) {
+    console.log('Popolamento dati sanitari:', data);
     const datiSanitari = data.datiScheda?.sanitarie || {};
     
-    document.getElementById('gruppoSanguignoDisplay').textContent = datiSanitari.gruppoSanguigno || '-';
-    document.getElementById('intolleranzeDisplay').textContent = datiSanitari.intolleranze || '-';
-    document.getElementById('allergieDisplay').textContent = datiSanitari.allergie || '-';
-    document.getElementById('farmaciDisplay').textContent = datiSanitari.farmaci || '-';
+    const fields = {
+        gruppoSanguigno: datiSanitari.gruppoSanguigno || '-',
+        intolleranze: datiSanitari.intolleranze || '-',
+        allergie: datiSanitari.allergie || '-',
+        farmaci: datiSanitari.farmaci || '-'
+    };
+
+    Object.entries(fields).forEach(([field, value]) => {
+        const displayElement = document.getElementById(`${field}Display`);
+        if (displayElement) {
+            displayElement.textContent = value;
+            console.log(`Aggiornato ${field}:`, value);
+        }
+    });
 }
 
 // Funzione per popolare la sezione progressione
 async function populateProgressione(data) {
+    console.log('Popolamento dati progressione:', data);
     const datiProgressione = data.datiScheda?.progressione || {};
     
-    document.getElementById('promessaDisplay').textContent = datiProgressione.promessa || '-';
-    document.getElementById('brevettoDisplay').textContent = datiProgressione.brevetto || '-';
-    document.getElementById('specialitaDisplay').textContent = datiProgressione.specialita || '-';
-    document.getElementById('cordaDisplay').textContent = datiProgressione.corda || '-';
+    const fields = {
+        promessa: datiProgressione.promessa || '-',
+        brevetto: datiProgressione.brevetto || '-',
+        specialita: datiProgressione.specialita || '-',
+        corda: datiProgressione.corda || '-'
+    };
+
+    Object.entries(fields).forEach(([field, value]) => {
+        const displayElement = document.getElementById(`${field}Display`);
+        if (displayElement) {
+            displayElement.textContent = value;
+            console.log(`Aggiornato ${field}:`, value);
+        }
+    });
 }
 
 // Funzioni per la gestione dei backup
@@ -1450,16 +1522,24 @@ function scheduleUpdate(callback) {
 
 // Funzione per abilitare la modifica di un campo
 function enableEdit(fieldId) {
+    console.log('Abilitazione modifica per il campo:', fieldId);
+    
     const displayElement = document.getElementById(`${fieldId}Display`);
     const editElement = document.getElementById(`${fieldId}Edit`);
     
     if (!displayElement || !editElement) {
         console.error(`Elementi non trovati per il campo ${fieldId}`);
+        showNotification(
+            'Errore di Modifica',
+            'Impossibile trovare gli elementi per la modifica',
+            NOTIFICATION_TYPES.ERROR
+        );
         return;
     }
     
     // Salva il valore corrente
     const currentValue = displayElement.textContent;
+    console.log('Valore corrente:', currentValue);
     
     // Mostra il campo di modifica e nascondi il display
     displayElement.classList.add('hidden');
@@ -1467,9 +1547,15 @@ function enableEdit(fieldId) {
     editElement.value = currentValue === '-' ? '' : currentValue;
     editElement.focus();
     
+    // Rimuovi eventuali pulsanti esistenti
+    const existingButtons = editElement.parentNode.querySelector('.button-container');
+    if (existingButtons) {
+        existingButtons.remove();
+    }
+    
     // Aggiungi pulsanti di conferma/annullamento
     const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'flex gap-2 mt-2';
+    buttonContainer.className = 'button-container flex gap-2 mt-2';
     buttonContainer.innerHTML = `
         <button class="save-btn bg-primary text-white px-3 py-1 rounded text-sm hover:bg-primary-dark transition-colors">
             Salva
@@ -1485,11 +1571,17 @@ function enableEdit(fieldId) {
     const saveBtn = buttonContainer.querySelector('.save-btn');
     saveBtn.addEventListener('click', async () => {
         try {
+            console.log('Tentativo di salvataggio per il campo:', fieldId);
             const newValue = editElement.value;
             if (await validateField(fieldId, newValue)) {
                 await saveField(fieldId, newValue);
                 displayElement.textContent = formatFieldValue(fieldId, newValue);
                 disableEdit(fieldId);
+                showNotification(
+                    'Modifica Salvata',
+                    'Il campo è stato aggiornato con successo',
+                    NOTIFICATION_TYPES.UPDATE
+                );
             }
         } catch (error) {
             console.error('Errore durante il salvataggio:', error);
@@ -1504,9 +1596,33 @@ function enableEdit(fieldId) {
     // Gestisci l'annullamento
     const cancelBtn = buttonContainer.querySelector('.cancel-btn');
     cancelBtn.addEventListener('click', () => {
+        console.log('Annullamento modifica per il campo:', fieldId);
         editElement.value = currentValue;
         disableEdit(fieldId);
     });
+}
+
+// Funzione per disabilitare la modifica di un campo
+function disableEdit(fieldId) {
+    console.log('Disabilitazione modifica per il campo:', fieldId);
+    
+    const displayElement = document.getElementById(`${fieldId}Display`);
+    const editElement = document.getElementById(`${fieldId}Edit`);
+    
+    if (!displayElement || !editElement) {
+        console.error(`Elementi non trovati per il campo ${fieldId}`);
+        return;
+    }
+    
+    // Nascondi il campo di modifica e mostra il display
+    displayElement.classList.remove('hidden');
+    editElement.classList.add('hidden');
+    
+    // Rimuovi i pulsanti
+    const buttonContainer = editElement.parentNode.querySelector('.button-container');
+    if (buttonContainer) {
+        buttonContainer.remove();
+    }
 }
 
 // Funzione per validare un campo
