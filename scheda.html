@@ -1839,6 +1839,983 @@
                 return false;
             }
         }
+
+        // Sistema di esportazione e importazione dati
+        const DATA_MANAGEMENT = {
+            // Esporta i dati in formato CSV
+            async exportToCSV(userData) {
+                try {
+                    LOADING_SYSTEM.show('Preparazione esportazione...');
+                    
+                    // Prepara i dati per l'esportazione
+                    const data = {
+                        anagrafica: {
+                            nome: userData.nome || '',
+                            cognome: userData.cognome || '',
+                            dataNascita: userData.dataNascita || '',
+                            luogoNascita: userData.luogoNascita || '',
+                            codiceFiscale: userData.codiceFiscale || '',
+                            sesso: userData.sesso || '',
+                            gruppoSanguigno: userData.gruppoSanguigno || '',
+                            rh: userData.rh || '',
+                            allergie: userData.allergie || '',
+                            patologie: userData.patologie || '',
+                            farmaci: userData.farmaci || ''
+                        },
+                        contatti: {
+                            indirizzo: userData.indirizzo || '',
+                            telefono: userData.telefono || '',
+                            email: userData.email || '',
+                            contattoEmergenza: userData.contattoEmergenza || '',
+                            telefonoEmergenza: userData.telefonoEmergenza || ''
+                        },
+                        documenti: {
+                            numeroTessera: userData.numeroTessera || '',
+                            dataScadenzaTessera: userData.dataScadenzaTessera || '',
+                            numeroPatente: userData.numeroPatente || '',
+                            dataScadenzaPatente: userData.dataScadenzaPatente || '',
+                            numeroCertificato: userData.numeroCertificato || '',
+                            dataScadenzaCertificato: userData.dataScadenzaCertificato || ''
+                        }
+                    };
+
+                    // Converti i dati in formato CSV
+                    const csvContent = this.convertToCSV(data);
+                    
+                    // Crea e scarica il file
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `dati_${userData.cognome}_${userData.nome}_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Esportazione Completata',
+                        'I dati sono stati esportati con successo',
+                        NOTIFICATION_TYPES.SUCCESS
+                    );
+                } catch (error) {
+                    console.error("Errore durante l'esportazione:", error);
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Errore di Esportazione',
+                        'Si è verificato un errore durante l\'esportazione dei dati',
+                        NOTIFICATION_TYPES.ERROR
+                    );
+                }
+            },
+
+            // Converte i dati in formato CSV
+            convertToCSV(data) {
+                const rows = [];
+                
+                // Intestazione
+                rows.push(['Sezione', 'Campo', 'Valore']);
+                
+                // Dati
+                for (const [section, fields] of Object.entries(data)) {
+                    for (const [field, value] of Object.entries(fields)) {
+                        rows.push([section, field, value]);
+                    }
+                }
+                
+                // Converti in CSV
+                return rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            },
+
+            // Importa i dati da file CSV
+            async importFromCSV(file) {
+                try {
+                    LOADING_SYSTEM.show('Importazione in corso...');
+                    
+                    const text = await file.text();
+                    const rows = text.split('\n').map(row => 
+                        row.split(',').map(cell => cell.replace(/^"|"$/g, ''))
+                    );
+                    
+                    // Rimuovi l'intestazione
+                    rows.shift();
+                    
+                    // Converti i dati nel formato corretto
+                    const importedData = {};
+                    for (const [section, field, value] of rows) {
+                        if (!importedData[section]) {
+                            importedData[section] = {};
+                        }
+                        importedData[section][field] = value;
+                    }
+                    
+                    // Chiedi conferma prima di importare
+                    const confirmed = await CONFIRM_SYSTEM.show(
+                        'Conferma Importazione',
+                        'Stai per importare nuovi dati. I dati esistenti verranno sovrascritti. Vuoi procedere?'
+                    );
+                    
+                    if (!confirmed) {
+                        LOADING_SYSTEM.hide();
+                        return;
+                    }
+                    
+                    // Aggiorna i dati
+                    for (const [section, fields] of Object.entries(importedData)) {
+                        for (const [field, value] of Object.entries(fields)) {
+                            const input = document.getElementById(field);
+                            if (input) {
+                                input.value = value;
+                            }
+                        }
+                    }
+                    
+                    // Salva i dati importati
+                    await saveData(currentUserId);
+                    
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Importazione Completata',
+                        'I dati sono stati importati con successo',
+                        NOTIFICATION_TYPES.SUCCESS
+                    );
+                } catch (error) {
+                    console.error("Errore durante l'importazione:", error);
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Errore di Importazione',
+                        'Si è verificato un errore durante l\'importazione dei dati',
+                        NOTIFICATION_TYPES.ERROR
+                    );
+                }
+            }
+        };
+
+        // Aggiungi i pulsanti di esportazione/importazione alla barra delle azioni
+        function addDataManagementButtons() {
+            const actionBar = document.querySelector('.action-bar');
+            if (!actionBar) return;
+            
+            const exportButton = document.createElement('button');
+            exportButton.className = 'px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center';
+            exportButton.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Esporta Dati
+            `;
+            exportButton.onclick = () => DATA_MANAGEMENT.exportToCSV(userData);
+            
+            const importButton = document.createElement('button');
+            importButton.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center ml-2';
+            importButton.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                Importa Dati
+            `;
+            
+            // Crea un input file nascosto per l'importazione
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.csv';
+            fileInput.style.display = 'none';
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    DATA_MANAGEMENT.importFromCSV(file);
+                }
+            };
+            
+            importButton.onclick = () => fileInput.click();
+            
+            actionBar.appendChild(exportButton);
+            actionBar.appendChild(importButton);
+            actionBar.appendChild(fileInput);
+        }
+
+        // Aggiorna la funzione initScheda per includere i nuovi pulsanti
+        function initScheda() {
+            // ... existing code ...
+            
+            // Aggiungi i pulsanti di gestione dati
+            addDataManagementButtons();
+            
+            // ... existing code ...
+        }
+
+        // Sistema di ricerca avanzata
+        const SEARCH_SYSTEM = {
+            searchModal: null,
+            searchInput: null,
+            filtersContainer: null,
+            resultsContainer: null,
+            currentFilters: new Set(),
+            
+            init() {
+                // Crea il modal di ricerca
+                this.searchModal = document.createElement('div');
+                this.searchModal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden';
+                this.searchModal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold">Ricerca Avanzata</h2>
+                            <button class="text-gray-500 hover:text-gray-700" id="closeSearchModal">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <input type="text" 
+                                   id="searchInput" 
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                   placeholder="Cerca per nome, cognome, codice fiscale...">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h3 class="font-bold mb-2">Filtri</h3>
+                            <div class="flex flex-wrap gap-2" id="filtersContainer">
+                                <button class="px-3 py-1 bg-gray-200 rounded-full text-sm hover:bg-gray-300" data-filter="anagrafica">
+                                    Anagrafica
+                                </button>
+                                <button class="px-3 py-1 bg-gray-200 rounded-full text-sm hover:bg-gray-300" data-filter="contatti">
+                                    Contatti
+                                </button>
+                                <button class="px-3 py-1 bg-gray-200 rounded-full text-sm hover:bg-gray-300" data-filter="documenti">
+                                    Documenti
+                                </button>
+                                <button class="px-3 py-1 bg-gray-200 rounded-full text-sm hover:bg-gray-300" data-filter="eventi">
+                                    Eventi
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="searchResults" class="space-y-2">
+                            <!-- I risultati della ricerca verranno inseriti qui -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(this.searchModal);
+                
+                // Inizializza i riferimenti
+                this.searchInput = this.searchModal.querySelector('#searchInput');
+                this.filtersContainer = this.searchModal.querySelector('#filtersContainer');
+                this.resultsContainer = this.searchModal.querySelector('#searchResults');
+                
+                // Aggiungi gli event listener
+                this.searchInput.addEventListener('input', debounce(() => this.performSearch(), 300));
+                this.filtersContainer.addEventListener('click', (e) => {
+                    if (e.target.matches('button')) {
+                        this.toggleFilter(e.target);
+                    }
+                });
+                this.searchModal.querySelector('#closeSearchModal').addEventListener('click', () => this.hide());
+            },
+            
+            show() {
+                this.searchModal.classList.remove('hidden');
+                this.searchInput.focus();
+            },
+            
+            hide() {
+                this.searchModal.classList.add('hidden');
+                this.searchInput.value = '';
+                this.currentFilters.clear();
+                this.updateFilterButtons();
+                this.resultsContainer.innerHTML = '';
+            },
+            
+            toggleFilter(button) {
+                const filter = button.dataset.filter;
+                if (this.currentFilters.has(filter)) {
+                    this.currentFilters.delete(filter);
+                } else {
+                    this.currentFilters.add(filter);
+                }
+                this.updateFilterButtons();
+                this.performSearch();
+            },
+            
+            updateFilterButtons() {
+                this.filtersContainer.querySelectorAll('button').forEach(button => {
+                    const filter = button.dataset.filter;
+                    if (this.currentFilters.has(filter)) {
+                        button.classList.add('bg-primary', 'text-white');
+                        button.classList.remove('bg-gray-200');
+                    } else {
+                        button.classList.remove('bg-primary', 'text-white');
+                        button.classList.add('bg-gray-200');
+                    }
+                });
+            },
+            
+            async performSearch() {
+                const query = this.searchInput.value.toLowerCase();
+                if (!query && this.currentFilters.size === 0) {
+                    this.resultsContainer.innerHTML = '';
+                    return;
+                }
+                
+                try {
+                    LOADING_SYSTEM.show('Ricerca in corso...');
+                    
+                    // Ottieni tutti gli esploratori
+                    const explorersRef = collection(db, 'explorers');
+                    const snapshot = await getDocs(explorersRef);
+                    
+                    const results = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (this.matchesSearch(data, query)) {
+                            results.push({ id: doc.id, ...data });
+                        }
+                    });
+                    
+                    this.displayResults(results);
+                    
+                    LOADING_SYSTEM.hide();
+                } catch (error) {
+                    console.error("Errore durante la ricerca:", error);
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Errore di Ricerca',
+                        'Si è verificato un errore durante la ricerca',
+                        NOTIFICATION_TYPES.ERROR
+                    );
+                }
+            },
+            
+            matchesSearch(data, query) {
+                // Se non ci sono filtri attivi, cerca in tutti i campi
+                if (this.currentFilters.size === 0) {
+                    return Object.values(data).some(value => 
+                        String(value).toLowerCase().includes(query)
+                    );
+                }
+                
+                // Altrimenti, cerca solo nei campi dei filtri selezionati
+                const searchableFields = {
+                    anagrafica: ['nome', 'cognome', 'dataNascita', 'luogoNascita', 'codiceFiscale', 'sesso', 'gruppoSanguigno'],
+                    contatti: ['indirizzo', 'telefono', 'email', 'contattoEmergenza', 'telefonoEmergenza'],
+                    documenti: ['numeroTessera', 'dataScadenzaTessera', 'numeroPatente', 'dataScadenzaPatente', 'numeroCertificato', 'dataScadenzaCertificato'],
+                    eventi: ['eventi']
+                };
+                
+                return Array.from(this.currentFilters).some(filter => {
+                    const fields = searchableFields[filter];
+                    return fields.some(field => {
+                        const value = data[field];
+                        return value && String(value).toLowerCase().includes(query);
+                    });
+                });
+            },
+            
+            displayResults(results) {
+                if (results.length === 0) {
+                    this.resultsContainer.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            Nessun risultato trovato
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const html = results.map(result => `
+                    <div class="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer" 
+                         onclick="SEARCH_SYSTEM.openExplorer('${result.id}')">
+                        <div class="font-bold">${result.cognome} ${result.nome}</div>
+                        <div class="text-sm text-gray-600">
+                            ${result.codiceFiscale ? `CF: ${result.codiceFiscale}` : ''}
+                            ${result.telefono ? `• Tel: ${result.telefono}` : ''}
+                            ${result.email ? `• Email: ${result.email}` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                this.resultsContainer.innerHTML = html;
+            },
+            
+            openExplorer(explorerId) {
+                this.hide();
+                window.location.href = `scheda.html?id=${explorerId}`;
+            }
+        };
+
+        // Funzione di debounce per ottimizzare le ricerche
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Aggiungi il pulsante di ricerca alla barra delle azioni
+        function addSearchButton() {
+            const actionBar = document.querySelector('.action-bar');
+            if (!actionBar) return;
+            
+            const searchButton = document.createElement('button');
+            searchButton.className = 'px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center ml-2';
+            searchButton.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Ricerca Avanzata
+            `;
+            searchButton.onclick = () => SEARCH_SYSTEM.show();
+            
+            actionBar.appendChild(searchButton);
+        }
+
+        // Aggiorna la funzione initScheda per includere il pulsante di ricerca
+        function initScheda() {
+            // ... existing code ...
+            
+            // Inizializza il sistema di ricerca
+            SEARCH_SYSTEM.init();
+            
+            // Aggiungi il pulsante di ricerca
+            addSearchButton();
+            
+            // ... existing code ...
+        }
+
+        // Sistema di statistiche e reportistica
+        const STATS_SYSTEM = {
+            statsModal: null,
+            currentReport: null,
+            
+            init() {
+                // Crea il modal delle statistiche
+                this.statsModal = document.createElement('div');
+                this.statsModal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden';
+                this.statsModal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold">Statistiche e Report</h2>
+                            <button class="text-gray-500 hover:text-gray-700" id="closeStatsModal">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="p-4 border rounded-lg">
+                                <h3 class="font-bold mb-2">Tipi di Report</h3>
+                                <div class="space-y-2">
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100 rounded" 
+                                            onclick="STATS_SYSTEM.generateReport('partecipazione')">
+                                        Partecipazione Eventi
+                                    </button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100 rounded" 
+                                            onclick="STATS_SYSTEM.generateReport('documenti')">
+                                        Stato Documenti
+                                    </button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100 rounded" 
+                                            onclick="STATS_SYSTEM.generateReport('anagrafica')">
+                                        Dati Anagrafici
+                                    </button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100 rounded" 
+                                            onclick="STATS_SYSTEM.generateReport('completo')">
+                                        Report Completo
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 border rounded-lg">
+                                <h3 class="font-bold mb-2">Esporta Report</h3>
+                                <div class="space-y-2">
+                                    <button class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" 
+                                            onclick="STATS_SYSTEM.exportToPDF()">
+                                        Esporta in PDF
+                                    </button>
+                                    <button class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600" 
+                                            onclick="STATS_SYSTEM.exportToExcel()">
+                                        Esporta in Excel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="statsContent" class="space-y-6">
+                            <!-- Il contenuto delle statistiche verrà inserito qui -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(this.statsModal);
+                
+                // Aggiungi gli event listener
+                this.statsModal.querySelector('#closeStatsModal').addEventListener('click', () => this.hide());
+            },
+            
+            show() {
+                this.statsModal.classList.remove('hidden');
+                this.generateReport('completo'); // Mostra il report completo di default
+            },
+            
+            hide() {
+                this.statsModal.classList.add('hidden');
+            },
+            
+            async generateReport(type) {
+                try {
+                    LOADING_SYSTEM.show('Generazione report in corso...');
+                    
+                    const statsContent = document.getElementById('statsContent');
+                    statsContent.innerHTML = '';
+                    
+                    switch (type) {
+                        case 'partecipazione':
+                            await this.generatePartecipazioneReport(statsContent);
+                            break;
+                        case 'documenti':
+                            await this.generateDocumentiReport(statsContent);
+                            break;
+                        case 'anagrafica':
+                            await this.generateAnagraficaReport(statsContent);
+                            break;
+                        case 'completo':
+                            await this.generateCompletoReport(statsContent);
+                            break;
+                    }
+                    
+                    this.currentReport = type;
+                    LOADING_SYSTEM.hide();
+                } catch (error) {
+                    console.error("Errore durante la generazione del report:", error);
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Errore di Generazione',
+                        'Si è verificato un errore durante la generazione del report',
+                        NOTIFICATION_TYPES.ERROR
+                    );
+                }
+            },
+            
+            async generatePartecipazioneReport(container) {
+                const events = userData.eventi || [];
+                const totalEvents = events.length;
+                const eventTypes = {};
+                
+                events.forEach(event => {
+                    eventTypes[event.tipo] = (eventTypes[event.tipo] || 0) + 1;
+                });
+                
+                // Crea il grafico a torta per i tipi di eventi
+                const chartHtml = `
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-bold mb-4">Partecipazione Eventi</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <canvas id="eventTypesChart"></canvas>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="font-bold">Statistiche Generali</div>
+                                <div>Totale Eventi: ${totalEvents}</div>
+                                <div>Tipi di Eventi: ${Object.keys(eventTypes).length}</div>
+                                <div class="mt-4">
+                                    ${Object.entries(eventTypes).map(([type, count]) => `
+                                        <div class="flex justify-between">
+                                            <span>${type}:</span>
+                                            <span>${count}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML = chartHtml;
+                
+                // Inizializza il grafico
+                const ctx = document.getElementById('eventTypesChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(eventTypes),
+                        datasets: [{
+                            data: Object.values(eventTypes),
+                            backgroundColor: [
+                                '#FF6384',
+                                '#36A2EB',
+                                '#FFCE56',
+                                '#4BC0C0',
+                                '#9966FF'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            },
+            
+            async generateDocumentiReport(container) {
+                const documenti = {
+                    tessera: {
+                        numero: userData.numeroTessera,
+                        scadenza: userData.dataScadenzaTessera
+                    },
+                    patente: {
+                        numero: userData.numeroPatente,
+                        scadenza: userData.dataScadenzaPatente
+                    },
+                    certificato: {
+                        numero: userData.numeroCertificato,
+                        scadenza: userData.dataScadenzaCertificato
+                    }
+                };
+                
+                const now = new Date();
+                const scadenze = Object.entries(documenti).map(([tipo, doc]) => {
+                    const scadenza = new Date(doc.scadenza);
+                    const giorniAllaScadenza = Math.ceil((scadenza - now) / (1000 * 60 * 60 * 24));
+                    return {
+                        tipo,
+                        numero: doc.numero,
+                        scadenza: doc.scadenza,
+                        giorniAllaScadenza,
+                        stato: giorniAllaScadenza > 30 ? 'valido' : 
+                               giorniAllaScadenza > 0 ? 'in_scadenza' : 'scaduto'
+                    };
+                });
+                
+                const html = `
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-bold mb-4">Stato Documenti</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <canvas id="documentiChart"></canvas>
+                            </div>
+                            <div class="space-y-4">
+                                ${scadenze.map(doc => `
+                                    <div class="p-3 border rounded-lg ${
+                                        doc.stato === 'valido' ? 'bg-green-50' :
+                                        doc.stato === 'in_scadenza' ? 'bg-yellow-50' :
+                                        'bg-red-50'
+                                    }">
+                                        <div class="font-bold">${doc.tipo.toUpperCase()}</div>
+                                        <div>Numero: ${doc.numero || 'Non specificato'}</div>
+                                        <div>Scadenza: ${doc.scadenza || 'Non specificata'}</div>
+                                        <div class="mt-1 ${
+                                            doc.stato === 'valido' ? 'text-green-600' :
+                                            doc.stato === 'in_scadenza' ? 'text-yellow-600' :
+                                            'text-red-600'
+                                        }">
+                                            ${doc.stato === 'valido' ? 'Documento valido' :
+                                              doc.stato === 'in_scadenza' ? `${doc.giorniAllaScadenza} giorni alla scadenza` :
+                                              'Documento scaduto'}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+                
+                // Inizializza il grafico
+                const ctx = document.getElementById('documentiChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: scadenze.map(doc => doc.tipo.toUpperCase()),
+                        datasets: [{
+                            label: 'Giorni alla scadenza',
+                            data: scadenze.map(doc => doc.giorniAllaScadenza),
+                            backgroundColor: scadenze.map(doc => 
+                                doc.stato === 'valido' ? '#4CAF50' :
+                                doc.stato === 'in_scadenza' ? '#FFC107' :
+                                '#F44336'
+                            )
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            },
+            
+            async generateAnagraficaReport(container) {
+                const anagrafica = {
+                    età: this.calculateAge(userData.dataNascita),
+                    sesso: userData.sesso,
+                    gruppoSanguigno: userData.gruppoSanguigno,
+                    rh: userData.rh,
+                    allergie: userData.allergie ? userData.allergie.split(',').length : 0,
+                    patologie: userData.patologie ? userData.patologie.split(',').length : 0,
+                    farmaci: userData.farmaci ? userData.farmaci.split(',').length : 0
+                };
+                
+                const html = `
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-bold mb-4">Dati Anagrafici</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <canvas id="anagraficaChart"></canvas>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="font-bold">Informazioni Generali</div>
+                                <div>Età: ${anagrafica.età} anni</div>
+                                <div>Sesso: ${anagrafica.sesso || 'Non specificato'}</div>
+                                <div>Gruppo Sanguigno: ${anagrafica.gruppoSanguigno || 'Non specificato'}${anagrafica.rh || ''}</div>
+                                <div class="mt-4">
+                                    <div class="font-bold">Condizioni Mediche</div>
+                                    <div>Allergie: ${anagrafica.allergie}</div>
+                                    <div>Patologie: ${anagrafica.patologie}</div>
+                                    <div>Farmaci: ${anagrafica.farmaci}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+                
+                // Inizializza il grafico
+                const ctx = document.getElementById('anagraficaChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Allergie', 'Patologie', 'Farmaci'],
+                        datasets: [{
+                            label: 'Condizioni Mediche',
+                            data: [anagrafica.allergie, anagrafica.patologie, anagrafica.farmaci],
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            r: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            },
+            
+            async generateCompletoReport(container) {
+                await this.generatePartecipazioneReport(container);
+                await this.generateDocumentiReport(container);
+                await this.generateAnagraficaReport(container);
+            },
+            
+            calculateAge(birthDate) {
+                if (!birthDate) return 'Non specificata';
+                const birth = new Date(birthDate);
+                const now = new Date();
+                let age = now.getFullYear() - birth.getFullYear();
+                const monthDiff = now.getMonth() - birth.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+                    age--;
+                }
+                
+                return age;
+            },
+            
+            async exportToPDF() {
+                try {
+                    LOADING_SYSTEM.show('Generazione PDF in corso...');
+                    
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    // Aggiungi il titolo
+                    doc.setFontSize(20);
+                    doc.text('Report Completo', 20, 20);
+                    
+                    // Aggiungi i dati
+                    doc.setFontSize(12);
+                    let y = 40;
+                    
+                    // Dati anagrafici
+                    doc.setFontSize(14);
+                    doc.text('Dati Anagrafici', 20, y);
+                    y += 10;
+                    doc.setFontSize(12);
+                    doc.text(`Nome: ${userData.nome}`, 20, y);
+                    y += 7;
+                    doc.text(`Cognome: ${userData.cognome}`, 20, y);
+                    y += 7;
+                    doc.text(`Data di Nascita: ${userData.dataNascita}`, 20, y);
+                    y += 7;
+                    doc.text(`Codice Fiscale: ${userData.codiceFiscale}`, 20, y);
+                    y += 15;
+                    
+                    // Documenti
+                    doc.setFontSize(14);
+                    doc.text('Documenti', 20, y);
+                    y += 10;
+                    doc.setFontSize(12);
+                    doc.text(`Tessera: ${userData.numeroTessera} (Scadenza: ${userData.dataScadenzaTessera})`, 20, y);
+                    y += 7;
+                    doc.text(`Patente: ${userData.numeroPatente} (Scadenza: ${userData.dataScadenzaPatente})`, 20, y);
+                    y += 7;
+                    doc.text(`Certificato: ${userData.numeroCertificato} (Scadenza: ${userData.dataScadenzaCertificato})`, 20, y);
+                    y += 15;
+                    
+                    // Eventi
+                    if (userData.eventi && userData.eventi.length > 0) {
+                        doc.setFontSize(14);
+                        doc.text('Eventi', 20, y);
+                        y += 10;
+                        doc.setFontSize(12);
+                        userData.eventi.forEach(event => {
+                            doc.text(`${event.data} - ${event.tipo}: ${event.nome}`, 20, y);
+                            y += 7;
+                        });
+                    }
+                    
+                    // Salva il PDF
+                    doc.save(`report_${userData.cognome}_${userData.nome}_${new Date().toISOString().split('T')[0]}.pdf`);
+                    
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'PDF Generato',
+                        'Il report è stato esportato con successo',
+                        NOTIFICATION_TYPES.SUCCESS
+                    );
+                } catch (error) {
+                    console.error("Errore durante l'esportazione in PDF:", error);
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Errore di Esportazione',
+                        'Si è verificato un errore durante la generazione del PDF',
+                        NOTIFICATION_TYPES.ERROR
+                    );
+                }
+            },
+            
+            async exportToExcel() {
+                try {
+                    LOADING_SYSTEM.show('Generazione Excel in corso...');
+                    
+                    // Prepara i dati
+                    const data = {
+                        anagrafica: {
+                            nome: userData.nome,
+                            cognome: userData.cognome,
+                            dataNascita: userData.dataNascita,
+                            luogoNascita: userData.luogoNascita,
+                            codiceFiscale: userData.codiceFiscale,
+                            sesso: userData.sesso,
+                            gruppoSanguigno: userData.gruppoSanguigno,
+                            rh: userData.rh
+                        },
+                        contatti: {
+                            indirizzo: userData.indirizzo,
+                            telefono: userData.telefono,
+                            email: userData.email,
+                            contattoEmergenza: userData.contattoEmergenza,
+                            telefonoEmergenza: userData.telefonoEmergenza
+                        },
+                        documenti: {
+                            numeroTessera: userData.numeroTessera,
+                            dataScadenzaTessera: userData.dataScadenzaTessera,
+                            numeroPatente: userData.numeroPatente,
+                            dataScadenzaPatente: userData.dataScadenzaPatente,
+                            numeroCertificato: userData.numeroCertificato,
+                            dataScadenzaCertificato: userData.dataScadenzaCertificato
+                        },
+                        eventi: userData.eventi || []
+                    };
+                    
+                    // Converti in CSV
+                    const csvContent = this.convertToCSV(data);
+                    
+                    // Crea e scarica il file
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `report_${userData.cognome}_${userData.nome}_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Excel Generato',
+                        'Il report è stato esportato con successo',
+                        NOTIFICATION_TYPES.SUCCESS
+                    );
+                } catch (error) {
+                    console.error("Errore durante l'esportazione in Excel:", error);
+                    LOADING_SYSTEM.hide();
+                    showNotification(
+                        'Errore di Esportazione',
+                        'Si è verificato un errore durante la generazione del file Excel',
+                        NOTIFICATION_TYPES.ERROR
+                    );
+                }
+            }
+        };
+
+        // Aggiungi il pulsante delle statistiche alla barra delle azioni
+        function addStatsButton() {
+            const actionBar = document.querySelector('.action-bar');
+            if (!actionBar) return;
+            
+            const statsButton = document.createElement('button');
+            statsButton.className = 'px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center ml-2';
+            statsButton.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Statistiche
+            `;
+            statsButton.onclick = () => STATS_SYSTEM.show();
+            
+            actionBar.appendChild(statsButton);
+        }
+
+        // Aggiorna la funzione initScheda per includere il pulsante delle statistiche
+        function initScheda() {
+            // ... existing code ...
+            
+            // Inizializza il sistema di statistiche
+            STATS_SYSTEM.init();
+            
+            // Aggiungi il pulsante delle statistiche
+            addStatsButton();
+            
+            // ... existing code ...
+        }
     </script>
     <script>
         // Gestione delle sfide e date
