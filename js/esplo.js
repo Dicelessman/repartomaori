@@ -1415,15 +1415,30 @@ async function updateBackupList() {
     }
 }
 
+// Funzione per schedulare gli aggiornamenti UI
+function scheduleUpdate(callback) {
+    requestAnimationFrame(() => {
+        callback();
+    });
+}
+
 // Funzione per abilitare la modifica di un campo
 function enableEdit(fieldId) {
     const displayElement = document.getElementById(`${fieldId}Display`);
     const editElement = document.getElementById(`${fieldId}Edit`);
     
-    if (!displayElement || !editElement) return;
+    if (!displayElement || !editElement) {
+        console.error(`Elementi non trovati per il campo ${fieldId}`);
+        return;
+    }
     
+    // Salva il valore corrente
+    const currentValue = displayElement.textContent;
+    
+    // Mostra il campo di modifica e nascondi il display
     displayElement.classList.add('hidden');
     editElement.classList.remove('hidden');
+    editElement.value = currentValue === '-' ? '' : currentValue;
     editElement.focus();
     
     // Aggiungi pulsanti di conferma/annullamento
@@ -1463,26 +1478,9 @@ function enableEdit(fieldId) {
     // Gestisci l'annullamento
     const cancelBtn = buttonContainer.querySelector('.cancel-btn');
     cancelBtn.addEventListener('click', () => {
-        editElement.value = displayElement.textContent;
+        editElement.value = currentValue;
         disableEdit(fieldId);
     });
-}
-
-// Funzione per disabilitare la modifica di un campo
-function disableEdit(fieldId) {
-    const displayElement = document.getElementById(`${fieldId}Display`);
-    const editElement = document.getElementById(`${fieldId}Edit`);
-    
-    if (!displayElement || !editElement) return;
-    
-    displayElement.classList.remove('hidden');
-    editElement.classList.add('hidden');
-    
-    // Rimuovi i pulsanti
-    const buttonContainer = editElement.parentNode.querySelector('.flex.gap-2');
-    if (buttonContainer) {
-        buttonContainer.remove();
-    }
 }
 
 // Funzione per validare un campo
@@ -1532,34 +1530,6 @@ function formatFieldValue(fieldId, value) {
         default:
             return value;
     }
-}
-
-// Funzione per salvare un campo
-async function saveField(fieldId, value) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const esploratoreId = urlParams.get('id');
-    
-    if (!esploratoreId) {
-        throw new Error('ID esploratore non trovato');
-    }
-    
-    // Determina il percorso del campo nei dati
-    const [sezione, campo] = fieldId.split(/(?=[A-Z])/).map(s => s.toLowerCase());
-    const updatePath = `datiScheda.${sezione}.${campo}`;
-    
-    // Prepara l'oggetto di aggiornamento
-    const updateData = {
-        [updatePath]: value,
-        lastUpdate: new Date().toISOString()
-    };
-    
-    // Salva i dati
-    await saveData(esploratoreId, updateData);
-    
-    // Aggiorna lo stato locale
-    const newData = { ...state.esploratoreData };
-    setNestedValue(newData, updatePath, value);
-    updateState({ esploratoreData: newData });
 }
 
 // Funzione di utilità per impostare un valore annidato
@@ -1735,6 +1705,45 @@ const throttledUpdateNavigationStyle = throttle((sezioneCorrente) => {
         });
     });
 }, THROTTLE_CONFIG.update);
+
+// Funzione per salvare un campo
+async function saveField(fieldId, value) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const esploratoreId = urlParams.get('id');
+    
+    if (!esploratoreId) {
+        throw new Error('ID esploratore non trovato');
+    }
+    
+    // Determina il percorso del campo nei dati
+    let updatePath;
+    switch (fieldId) {
+        case 'dataNascita':
+        case 'codiceFiscale':
+        case 'indirizzo':
+        case 'telefono':
+            updatePath = `datiScheda.anagrafici.${fieldId}`;
+            break;
+        default:
+            updatePath = `datiScheda.${fieldId}`;
+    }
+    
+    // Prepara l'oggetto di aggiornamento
+    const updateData = {
+        [updatePath]: value,
+        lastUpdate: new Date().toISOString()
+    };
+    
+    console.log('Salvataggio dati:', updateData);
+    
+    // Salva i dati
+    await saveData(esploratoreId, updateData);
+    
+    // Aggiorna lo stato locale
+    const newData = { ...state.esploratoreData };
+    setNestedValue(newData, updatePath, value);
+    updateState({ esploratoreData: newData });
+}
 
 // Inizializza la scheda quando il documento è pronto
 document.addEventListener('DOMContentLoaded', initScheda); 
