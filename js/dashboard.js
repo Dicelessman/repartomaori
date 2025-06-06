@@ -119,8 +119,22 @@ confirmAddExplorer.addEventListener('click', async () => {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
+    // Validazione dei campi
     if (!nome || !cognome || !email || !password) {
         showToast('Tutti i campi sono obbligatori', 'error');
+        return;
+    }
+
+    // Validazione della password
+    if (password.length < 6) {
+        showToast('La password deve essere di almeno 6 caratteri', 'error');
+        return;
+    }
+
+    // Validazione dell'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Inserisci un indirizzo email valido', 'error');
         return;
     }
 
@@ -148,7 +162,23 @@ confirmAddExplorer.addEventListener('click', async () => {
         showToast('Esploratore aggiunto con successo', 'success');
     } catch (error) {
         console.error('Errore durante l\'aggiunta dell\'esploratore:', error);
-        showToast('Errore durante l\'aggiunta dell\'esploratore. Riprova più tardi.', 'error');
+        
+        // Gestione specifica degli errori di Firebase Auth
+        let errorMessage = 'Errore durante l\'aggiunta dell\'esploratore. Riprova più tardi.';
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                errorMessage = 'Questa email è già registrata nel sistema.';
+                break;
+            case 'auth/weak-password':
+                errorMessage = 'La password deve essere di almeno 6 caratteri.';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'L\'indirizzo email non è valido.';
+                break;
+        }
+        
+        showToast(errorMessage, 'error');
     } finally {
         hideLoader();
     }
